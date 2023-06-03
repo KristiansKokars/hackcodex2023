@@ -1,2 +1,14 @@
-<h1>Welcome to SvelteKit</h1>
-<p>Visit <a href="https://kit.svelte.dev">kit.svelte.dev</a> to read the documentation</p>
+<script lang="ts">
+	import { Label, Fileupload, Card } from 'flowbite-svelte';
+
+	let fileuploadprops = {
+		id: 'document'
+	};
+</script>
+
+<div class="min-h-screen m-auto flex justify-center items-center max-w-screen-md">
+	<Card>
+		<Label class="pb-2">Upload Document</Label>
+		<Fileupload {...fileuploadprops} />
+	</Card>
+</div>
