@@ -1,8 +1,6 @@
 using Azure;
 using Azure.AI.FormRecognizer.DocumentAnalysis;
 
-using System.Text.Json;
-
 public class AzureAIService
 {
     // "https://github.com/Azure-Samples/cognitive-services-REST-api-samples/raw/master/curl/form-recognizer/rest-api/invoice.pdf"
@@ -56,7 +54,7 @@ public class AzureAIService
             {
                 if (itemsField.FieldType == DocumentFieldType.List)
                 {
-                    var itemsList = "[";
+                    List<Dictionary<String, object>> itemsList = new List<Dictionary<string, object>>();
 
                     foreach (DocumentField itemField in itemsField.Value.AsList())
                     {
@@ -93,11 +91,9 @@ public class AzureAIService
                             }
                         }
 
-                        var itemJson = JsonSerializer.Serialize(item);
-                        itemsList += itemJson;
+                        itemsList.Add(item);
                     }
 
-                    itemsList += "]";
                     invoiceFields.Add("items", itemsList);
                 }
             }

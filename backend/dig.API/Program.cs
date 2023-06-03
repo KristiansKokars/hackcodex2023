@@ -1,5 +1,7 @@
 using Microsoft.EntityFrameworkCore;
 
+using System.Text.Json;
+
 DotNetEnv.Env.Load();
 
 var builder = WebApplication.CreateBuilder(args);
@@ -39,10 +41,10 @@ if (app.Environment.IsDevelopment())
 
 app.MapGet("/", () => "Hello World!");
 
-app.MapGet("/process", async () => 
-{
-    var recognizedInvoice = await AzureAIService.RecognizeInvoiceModel("https://github.com/Azure-Samples/cognitive-services-REST-api-samples/raw/master/curl/form-recognizer/rest-api/invoice.pdf");
-});
+// app.MapGet("/process", async () => 
+// {
+//     var recognizedInvoice = await AzureAIService.RecognizeInvoiceModel("https://github.com/Azure-Samples/cognitive-services-REST-api-samples/raw/master/curl/form-recognizer/rest-api/invoice.pdf");
+// });
 
 app.MapPost("/upload", async (HttpContext context) =>
 {
@@ -56,7 +58,13 @@ app.MapPost("/upload", async (HttpContext context) =>
         var fileName = await AzureFileService.SaveFileToStorage(file);
 
         var req = await AzureAIService.RecognizeInvoiceModel(fileName);
-        Console.WriteLine(req);
+
+        var jsString = JsonSerializer.Serialize(req);
+
+        Console.WriteLine();
+        Console.WriteLine(jsString);
+        Console.WriteLine();
+
         Console.WriteLine("File name: " + fileName);
         fileNames.Add(fileName);
     }

@@ -5,12 +5,9 @@ public class AzureFileService
 {
     public static async Task<string> SaveFileToStorage(IFormFile file)
     {
-        
-        // TODO: add your_storage_account_connection_string
         var connectionString = Environment.GetEnvironmentVariable("FR_BLOB_CONNECTION_STRING");
         BlobServiceClient blobServiceClient = new BlobServiceClient(connectionString);
 
-        // TODO: add your_container_name
         string containerName = Environment.GetEnvironmentVariable("FR_CONTAINER");
         BlobContainerClient containerClient = blobServiceClient.GetBlobContainerClient(containerName);
 
