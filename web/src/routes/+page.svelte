@@ -19,11 +19,16 @@
 			filesFormData.append('files', file);
 		}
 
-		fetch(`${PUBLIC_BACKEND_URL}/upload`, {
-			method: 'POST',
-			mode: 'cors',
-			body: filesFormData
-		});
+		console.log(`${PUBLIC_BACKEND_URL}/upload`);
+		try {
+			fetch(`/upload`, {
+				method: 'POST',
+				mode: 'cors',
+				body: filesFormData
+			});
+		} catch (error) {
+			console.error(error);
+		}
 	}
 </script>
 

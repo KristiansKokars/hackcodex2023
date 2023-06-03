@@ -8,6 +8,7 @@ public class AzureAIService
     // "https://github.com/Azure-Samples/cognitive-services-REST-api-samples/raw/master/curl/form-recognizer/rest-api/invoice.pdf"
     public static async Task<Dictionary<string, object>> RecognizeInvoiceModel(string invoiceLink)
     {
+        Console.WriteLine($"Azure AI Service Invoice Link: ${invoiceLink}");
         //use your `key` and `endpoint` environment variables to create your `AzureKeyCredential` and `DocumentAnalysisClient` instances
         string key = Environment.GetEnvironmentVariable("FR_KEY");
         string endpoint = Environment.GetEnvironmentVariable("FR_ENDPOINT");

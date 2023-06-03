@@ -1,5 +1,7 @@
 using Microsoft.EntityFrameworkCore;
 
+DotNetEnv.Env.Load();
+
 var builder = WebApplication.CreateBuilder(args);
 
 // Add database config
@@ -8,6 +10,17 @@ var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
 
+builder.Configuration.AddEnvironmentVariables();
+
+builder.Services.AddCors(options =>
+{
+    options.AddDefaultPolicy(o =>
+    {
+        o.AllowAnyOrigin()
+            .AllowAnyHeader();
+    });
+});
+
 builder.Services.AddControllers();
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();
@@ -15,6 +28,8 @@ builder.Services.AddSwaggerGen();
 
 var app = builder.Build();
 
+app.UseRouting();
+app.UseCors();
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
 {
@@ -29,17 +44,24 @@ app.MapGet("/process", async () =>
     var recognizedInvoice = await AzureAIService.RecognizeInvoiceModel("https://github.com/Azure-Samples/cognitive-services-REST-api-samples/raw/master/curl/form-recognizer/rest-api/invoice.pdf");
 });
 
-app.MapPost("/upload", async (IFormFile file) =>
+app.MapPost("/upload", async (HttpContext context) =>
 {
-    if (file != null && file.Length > 0)
+    Console.WriteLine(context.Request.Form.Files);
+
+    var files = context.Request.Form.Files;
+    var fileNames = new List<string>();
+
+    foreach (var file in files)
     {
-        var fileName = AzureFileService.SaveFileToStorage(file);
-        return Results.Ok(fileName);
+        var fileName = await AzureFileService.SaveFileToStorage(file);
+
+        var req = await AzureAIService.RecognizeInvoiceModel(fileName);
+        Console.WriteLine(req);
+        Console.WriteLine("File name: " + fileName);
+        fileNames.Add(fileName);
     }
-    else
-    {
-        return Results.BadRequest();
-    }
+
+    return Results.Ok(fileNames);
 });
 
 app.Run();
