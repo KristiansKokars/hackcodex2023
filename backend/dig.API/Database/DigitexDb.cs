@@ -1,11 +1,10 @@
 using Microsoft.EntityFrameworkCore;
 
-class DigitexDb : DbContext
+public class DigitexDb : DbContext
 {
     public DigitexDb(DbContextOptions<DigitexDb> options)
         : base(options) { }
 
     public DbSet<Document> Documents => Set<Document>();
-    public DbSet<DocumentJob> DocumentJobs => Set<DocumentJob>();
     public DbSet<SystemUser> SystemUsers => Set<SystemUser>();
 }
