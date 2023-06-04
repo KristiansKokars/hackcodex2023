@@ -2,6 +2,7 @@
 	import { goto } from '$app/navigation';
 	import login from '$lib/assets/login.jpg';
 	import type { SimpleErrorMessage } from '$lib/common/SimpleErrorMessage';
+	import HackathonCallout from '$lib/components/HackathonCallout.svelte';
 	import { Button, Card, Input, Label, Spinner } from 'flowbite-svelte';
 
 	let username = '';
@@ -37,10 +38,7 @@
 	>
 		<div class="mx-auto w-full max-w-sm lg:w-96">
 			<div>
-				<Card color="yellow" class="mb-4"
-					>Due to HackathonX time constraints, authentication is done by simple username and there
-					are no requirements for a password.</Card
-				>
+				<HackathonCallout />
 				<!-- TODO: this causes a cumulative layout shift, which is not good for UX, but time constraints force to keep it this way for now -->
 				{#if errorMessage}
 					<Card color="red" class="mb-4"

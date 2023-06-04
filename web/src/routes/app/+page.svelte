@@ -51,8 +51,6 @@
 	};
 </script>
 
-<NavBar />
-
 <div class="min-h-screen m-auto flex justify-center items-center max-w-screen-md">
 	<Card class="w-96">
 		<Label class="pb-2">Upload Document</Label>

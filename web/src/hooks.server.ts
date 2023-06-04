@@ -38,7 +38,11 @@ const handleProtectedRoutes: Handle = async ({ event, resolve }) => {
 	}
 
 	if (isLoggedIn && unauthorizedRoutes.includes(event.url.pathname)) {
-		throw redirect(302, '/');
+		throw redirect(302, '/app');
+	}
+
+	if (isLoggedIn && event.url.pathname === '/') {
+		throw redirect(302, '/app');
 	}
 
 	const response = await resolve(event);

@@ -22,11 +22,6 @@
 					aria-expanded="false"
 				>
 					<span class="sr-only">Open main menu</span>
-					<!--
-            Icon when menu is closed.
-
-            Menu open: "hidden", Menu closed: "block"
-          -->
 					<Button
 						on:click={logOut}
 						class="inline-flex items-center border-b-2 border-transparent px-1 pt-1 text-sm font-medium text-gray-900"
@@ -49,50 +44,28 @@
 				<div class="hidden sm:ml-6 sm:flex sm:space-x-8">
 					<!-- Current: "border-indigo-500 text-gray-900", Default: "border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700" -->
 					<a
-						href="/list"
+						href="/app/list"
 						class="inline-flex items-center border-b-2 border-transparent px-1 pt-1 text-sm font-medium text-gray-500 hover:border-gray-300 hover:text-gray-700"
 						>List</a
 					>
 				</div>
 			</div>
 			<div
-				class="absolute inset-y-0 right-0 flex items-center pr-2 sm:static sm:inset-auto sm:ml-6 sm:pr-0"
+				class="absolute inset-y-0 right-0 flex items-center pr-2 sm:static sm:inset-auto sm:ml-6 sm:pr-0 space-x-4"
 			>
-				<a class="mr-4" href="#"
-					><button
-						type="button"
-						class="relative inline-flex items-center gap-x-1.5 rounded-md bg-indigo-600 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600"
-					>
-						<svg class="-ml-0.5 h-5 w-5" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
-							<path
-								d="M10.75 4.75a.75.75 0 00-1.5 0v4.5h-4.5a.75.75 0 000 1.5h4.5v4.5a.75.75 0 001.5 0v-4.5h4.5a.75.75 0 000-1.5h-4.5v-4.5z"
-							/>
-						</svg>
-						Upload File
-					</button></a
+				<a
+					href="/app"
+					class="relative inline-flex items-center gap-x-1.5 rounded-md bg-indigo-600 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600"
 				>
+					<svg class="-ml-0.5 h-5 w-5" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+						<path
+							d="M10.75 4.75a.75.75 0 00-1.5 0v4.5h-4.5a.75.75 0 000 1.5h4.5v4.5a.75.75 0 001.5 0v-4.5h4.5a.75.75 0 000-1.5h-4.5v-4.5z"
+						/>
+					</svg>
+					Upload File
+				</a>
 				<Button color="alternative" on:click={logOut}>Log Out</Button>
-
-				<!-- Profile dropdown -->
-				<div class="relative ml-3" />
 			</div>
-		</div>
-	</div>
-
-	<!-- Mobile menu, show/hide based on menu state. -->
-	<div class="sm:hidden" id="mobile-menu">
-		<div class="space-y-1 pb-4 pt-2">
-			<!-- Current: "bg-indigo-50 border-indigo-500 text-indigo-700", Default: "border-transparent text-gray-500 hover:bg-gray-50 hover:border-gray-300 hover:text-gray-700" -->
-			<a
-				href="/list"
-				class="block border-l-4 border-transparent py-2 pl-3 pr-4 text-base font-medium text-gray-500 hover:border-gray-300 hover:bg-gray-50 hover:text-gray-700"
-				>List</a
-			>
-			<a
-				href="#"
-				class="block border-l-4 border-indigo-500 bg-indigo-50 py-2 pl-3 pr-4 text-base font-medium text-indigo-700"
-				>Upload File</a
-			>
 		</div>
 	</div>
 </nav>
