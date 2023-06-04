@@ -1,6 +1,5 @@
 <script lang="ts">
 	import { goto } from '$app/navigation';
-	import { PUBLIC_BACKEND_URL } from '$env/static/public';
 	import Logo from '$lib/components/Logo.svelte';
 	import { Label, Card, Dropzone, Button } from 'flowbite-svelte';
 
