@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { page } from '$app/stores';
 	import type { DocumentRow } from '$lib/features/documents/DocumentRow.js';
-	import { Label, Input, Button, Card } from 'flowbite-svelte';
+	import { Label, Input, Button, Card, Progressbar } from 'flowbite-svelte';
 
 	export let data;
 
@@ -20,17 +20,20 @@
 	let formFields: FormField[] = [];
 
 	for (const [key, value] of Object.entries(scannedDocument.content)) {
-		const documentValue = value as DocumentRow;
-		const fields: FormField[] = [];
+		const documentValue = value as DocumentRow | null;
 
-		fields.push({
+		if (documentValue === null) {
+			continue;
+		}
+
+		formFields.push({
 			label: key,
 			value: documentValue.Value,
-			confidence: documentValue.Confidence
+			confidence: documentValue.Confidence * 100
 		});
-
-		formFields = fields;
 	}
+
+	formFields = formFields;
 
 	async function editOnBackend() {
 		await fetch(`/edit?id=${documentId}`);
@@ -57,6 +60,8 @@
 			{#each formFields as formField}
 				<div class="mb-6 w-96">
 					<Label for="large-input" class="block mb-2">{formField.label}</Label>
+					<Label>Confidence: {formField.confidence.toPrecision(2)}%</Label>
+					<Progressbar progress={`${formField.confidence}`} color="red" />
 					<Input
 						class="h-8 rounded-none"
 						id={formField.label}

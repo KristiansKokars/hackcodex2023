@@ -16,7 +16,7 @@
 		}
 
 		try {
-			fetch(`/upload`, {
+			fetch(`/app/upload`, {
 				method: 'POST',
 				mode: 'cors',
 				body: filesFormData
