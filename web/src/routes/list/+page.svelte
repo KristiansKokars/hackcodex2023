@@ -110,6 +110,7 @@
       <TableHeadCell on:click={() => sortTable('doc_date')}>Document Date</TableHeadCell>
       <TableHeadCell on:click={() => sortTable('uploader')}>Uploader</TableHeadCell>
       <TableHeadCell on:click={() => sortTable('date')}>Upload Date</TableHeadCell>
+      <TableHeadCell></TableHeadCell>
     </TableHead>
     <TableBody class="divide-y">
       {#each $sortItems as item}
@@ -121,6 +122,7 @@
           <TableBodyCell>{item.doc_date}</TableBodyCell>
           <TableBodyCell>{item.uploader}</TableBodyCell>
           <TableBodyCell>{item.date}</TableBodyCell>
+          <TableBodyCell><a class="text-purple-400 hover:text-purple-600">Open</a></TableBodyCell>
         </TableBodyRow>
       {/each}
     </TableBody>
