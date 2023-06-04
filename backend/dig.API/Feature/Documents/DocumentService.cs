@@ -74,7 +74,8 @@ public class DocumentService
             Content = content,
             UserId = userId,
             Link = link,
-            Status = status
+            Status = status,
+            CreatedAt = DateTime.Now
         };
         return document;
     }

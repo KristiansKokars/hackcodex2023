@@ -103,7 +103,10 @@ public static class DocumentRoutes
             Id = d.Id,
             Content = JsonSerializer.Deserialize<DocContentDto>(d.Content)!,
             Link = d.Link,
-            Status = d.Status
+            Status = d.Status,
+            CreatedAt = d.CreatedAt != null 
+                ? Helpers.ConvertToUnixMillis(d.CreatedAt) 
+                : Helpers.ConvertToUnixMillis(DateTime.Now),
         }).ToList();
 
         return Results.Ok(documentDtos);
@@ -138,7 +141,10 @@ public static class DocumentRoutes
                 Id = document.Id,
                 Content = JsonSerializer.Deserialize<DocContentDto>(document.Content)!,
                 Link = document.Link,
-                Status = document.Status
+                Status = document.Status,
+                CreatedAt = document.CreatedAt != null 
+                    ? Helpers.ConvertToUnixMillis(document.CreatedAt) 
+                    : Helpers.ConvertToUnixMillis(DateTime.Now),
             };
 
             return Results.Ok(documentDto);
@@ -198,7 +204,10 @@ public static class DocumentRoutes
                         Id = document.Id,
                         Content = JsonSerializer.Deserialize<DocContentDto>(contentMarkedJSON)!,
                         Link = document.Link,
-                        Status = document.Status
+                        Status = document.Status,
+                        CreatedAt = document.CreatedAt != null 
+                            ? Helpers.ConvertToUnixMillis(document.CreatedAt) 
+                            : Helpers.ConvertToUnixMillis(DateTime.Now),
                     };
 
                     return Results.Ok(documentDtoMarked);
