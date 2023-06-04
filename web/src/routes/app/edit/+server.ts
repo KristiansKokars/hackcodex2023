@@ -24,7 +24,9 @@ export async function POST({ request, url, fetch }) {
 
 	// TODO: this is terrible but it is 1:31AM and I want this to just work, so JSON pain it is
 	const jsonContent = await request.json();
+	console.log(jsonContent);
 	const response = await fetch(`${PUBLIC_BACKEND_URL}/resolve/${documentId}`, {
+		method: 'POST',
 		body: JSON.stringify(jsonContent)
 	});
 	return response;

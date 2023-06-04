@@ -39,7 +39,8 @@
 	formFields = formFields;
 
 	async function updateWithoutEdits() {
-		await fetch(`/edit/${documentId}`, {
+		await fetch(`/app/edit?id=${documentId}`, {
+			method: 'POST',
 			body: JSON.stringify(Object.fromEntries(originalDocumentRows))
 		});
 	}
@@ -56,7 +57,8 @@
 
 		const newDocumentRows = JSON.stringify(Object.fromEntries(newDocumentMap));
 		// TODO: someone do something with this response and show loading/success/error, I want to sleep
-		const response = await fetch(`/edit/${documentId}`, {
+		const response = await fetch(`/app/edit?id=${documentId}`, {
+			method: 'POST',
 			body: newDocumentRows
 		});
 	}
