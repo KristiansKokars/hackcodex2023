@@ -1,8 +1,7 @@
 import { dev } from '$app/environment';
 import { PUBLIC_BACKEND_URL } from '$env/static/public';
-import type { User } from '$lib/features/auth/User.js';
+import type { User } from '$lib/features/auth/User';
 import { redirect } from '@sveltejs/kit';
-import cookie from 'cookie';
 
 export async function POST({ fetch, request, locals, cookies }) {
 	if (dev) {
@@ -21,6 +20,7 @@ export async function POST({ fetch, request, locals, cookies }) {
 	const response = await fetch(`${PUBLIC_BACKEND_URL}/login`, {
 		method: 'POST',
 		mode: 'cors',
+		credentials: 'include',
 		headers: {
 			authorization: authorizationHeader
 		}
@@ -30,15 +30,7 @@ export async function POST({ fetch, request, locals, cookies }) {
 		const user = (await response.json()) as User;
 		locals.user = user;
 
-		const aspNetCookie = cookie.parse(response.headers.get('Set-Cookie'))['.AspNetCore.cookie'];
-		console.log(aspNetCookie);
-
-		cookies.set('.AspNetCore.cookie', aspNetCookie, {
-			path: '/',
-			httpOnly: true,
-			secure: true,
-			domain: 'localhost'
-		});
+		cookies.set("sessionUser", JSON.stringify(user));
 
 		throw redirect(302, '/');
 	}

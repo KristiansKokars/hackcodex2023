@@ -12,8 +12,10 @@
 	async function loginUser() {
 		errorMessage = '';
 		isLoggingIn = true;
+
 		const response = await fetch('/login', {
 			method: 'POST',
+			credentials: 'include',
 			headers: {
 				authorization: 'Basic ' + btoa(username + ':' + password)
 			}
