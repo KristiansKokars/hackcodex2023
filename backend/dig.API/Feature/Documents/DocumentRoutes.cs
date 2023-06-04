@@ -78,7 +78,10 @@ public static class DocumentRoutes
             Id = d.Id,
             Content = JsonSerializer.Deserialize<DocContentDto>(d.Content)!,
             Link = d.Link,
-            Status = d.Status
+            Status = d.Status,
+            CreatedAt = d.CreatedAt != null 
+                ? Helpers.ConvertToUnixMillis(d.CreatedAt) 
+                : Helpers.ConvertToUnixMillis(DateTime.Now),
         }).ToList();
 
         return Results.Ok(documentDtos);

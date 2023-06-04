@@ -3,6 +3,7 @@
 	import NavBar from '$lib/components/NavBar.svelte';
 	import {
 		Button,
+		List,
 		Table,
 		TableBody,
 		TableBodyCell,
@@ -10,61 +11,94 @@
 		TableHead,
 		TableHeadCell
 	} from 'flowbite-svelte';
+	import { onMount } from 'svelte';
 	import { writable } from 'svelte/store';
 
-	let items = [
-		{
-			mark: 1,
-			statuss: 'Success',
-			doc_num: '1111222',
-			supplier_num: 'SUP1122',
-			doc_date: '04.06.2023',
-			uploader: 'Ludvig Hero',
-			date: '04.06.2023'
-		},
-		{
-			mark: 0,
-			statuss: 'Needs validation',
-			doc_num: '1111222',
-			supplier_num: 'SUP1122',
-			doc_date: '04.06.2023',
-			uploader: 'Ludvig Hero',
-			date: '04.06.2023'
-		},
-		{
-			mark: 1,
-			statuss: 'Success',
-			doc_num: '1111222',
-			supplier_num: 'SUP1122',
-			doc_date: '04.06.2023',
-			uploader: 'Ludvig Hero',
-			date: '04.06.2023'
-		},
-		{
-			mark: 1,
-			statuss: 'Success',
-			doc_num: '1111222',
-			supplier_num: 'SUP1122',
-			doc_date: '04.06.2023',
-			uploader: 'Ludvig Hero',
-			date: '04.06.2023'
-		}
-	];
+	interface ScanDocument {
+		id: string;
+		content: DocumentInvoiceId;
+		link: string;
+		status: string;
+		createdAt: number;
+	}
+
+	interface DocumentInvoiceId {
+		invoiceId: DocumentRow;
+	}
+
+	interface DocumentRow {
+		Value: string,
+		Confidence: number
+	}
+
+	// interface ScanDocumentContent {
+	// 	invoiceDate: DocumentRow;
+	// 	invoiceId: DocumentRow;
+	// 	totalWithNoTax: DocumentRow;
+	// 	totalTax: DocumentRow;
+	// 	total: DocumentRow;
+	// 	vendorAddress: DocumentRow;
+	// 	buyerAddress: DocumentRow;
+	// 	dateToPay: DocumentRow;
+	// 	vendorRegNum: DocumentRow;
+	// 	buyerRegNum: DocumentRow;
+	// 	vendorCompanyName: DocumentRow;
+	// 	buyerCompanyName: DocumentRow;
+	// 	vendorBankAccount: DocumentRow;
+	// 	buyerBankAccount: DocumentRow;
+	// 	vendorPVNnum: DocumentRow;
+	// 	buyerPVNnum: DocumentRow;
+	// 	physicalBuyerName: DocumentRow;
+	// }
+
+	let items: {
+		mark: string;
+		statuss: string;
+		doc_num: string;
+		// TODO: add created date in backend
+		date: number;
+		link: string;
+	}[] = [];
+
+	async function getDocuments() {
+		const response = await fetch('/list');
+		const jsonData = await response.json();
+
+		console.log(jsonData[0])
+
+		// for (const [key, value] of Object.entries(jsonData[0].content)) {
+		// 	console.log(key);
+		// }
+
+		const data = jsonData as ScanDocument[];		
+		console.log(jsonData);
+
+		items = data.map((data) => {
+			const rowMark = data.status == 'Correct' ? '✅': '❌';
+
+			const item = {
+				mark: rowMark,
+				statuss: data.status,
+				doc_num: data.content.invoiceId.Value,
+				// TODO: add created date in backend
+				date: data.createdAt,
+				link: data.link,
+			};
+			return item;
+		});
+	}
+
+	onMount(() => {
+		getDocuments();
+	})
+
+	$: {
+		console.log(items[0])
+	}
 
 	const sortKey = writable('id'); // default sort key
 	const sortDirection = writable(1); // default sort direction (ascending)
 	const sortItems = writable(items.slice()); // make a copy of the items array
-
-	// Define a function to sort the items
-	const sortTable = (key) => {
-		// If the same key is clicked, reverse the sort direction
-		if ($sortKey === key) {
-			sortDirection.update((val) => -val);
-		} else {
-			sortKey.set(key);
-			sortDirection.set(1);
-		}
-	};
 
 	$: {
 		const key = $sortKey;
@@ -82,9 +116,16 @@
 		sortItems.set(sorted);
 	}
 
-	async function getDocuments() {
-		await fetch('/list');
-	}
+	// Define a function to sort the items
+	const sortTable = (key) => {
+		// If the same key is clicked, reverse the sort direction
+		if ($sortKey === key) {
+			sortDirection.update((val) => -val);
+		} else {
+			sortKey.set(key);
+			sortDirection.set(1);
+		}
+	};
 </script>
 
 <NavBar />
@@ -94,22 +135,18 @@
 		<TableHeadCell on:click={() => sortTable('mark')} />
 		<TableHeadCell on:click={() => sortTable('statuss')}>Statuss</TableHeadCell>
 		<TableHeadCell on:click={() => sortTable('doc_num')}>Document Number</TableHeadCell>
-		<TableHeadCell on:click={() => sortTable('supplier_num')}>Supplier Number</TableHeadCell>
-		<TableHeadCell on:click={() => sortTable('doc_date')}>Document Date</TableHeadCell>
-		<TableHeadCell on:click={() => sortTable('uploader')}>Uploader</TableHeadCell>
 		<TableHeadCell on:click={() => sortTable('date')}>Upload Date</TableHeadCell>
+		<TableHeadCell on:click={() => sortTable('link')}>Link</TableHeadCell>
 		<TableHeadCell />
 	</TableHead>
 	<TableBody>
-		{#each $sortItems as item}
+		{#each items as item}
 			<TableBodyRow>
 				<TableBodyCell>{item.mark}</TableBodyCell>
 				<TableBodyCell>{item.statuss}</TableBodyCell>
 				<TableBodyCell>{item.doc_num}</TableBodyCell>
-				<TableBodyCell>{item.supplier_num}</TableBodyCell>
-				<TableBodyCell>{item.doc_date}</TableBodyCell>
-				<TableBodyCell>{item.uploader}</TableBodyCell>
 				<TableBodyCell>{item.date}</TableBodyCell>
+				<TableBodyCell>{item.link}</TableBodyCell>
 				<TableBodyCell><a class="text-purple-400 hover:text-purple-600">Open</a></TableBodyCell>
 			</TableBodyRow>
 		{/each}

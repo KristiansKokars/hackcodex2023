@@ -7,4 +7,5 @@ public class Document
 
     // Correct, Faulty
     public string Status { get; set; }
+    public DateTime CreatedAt { get; set; }
 }

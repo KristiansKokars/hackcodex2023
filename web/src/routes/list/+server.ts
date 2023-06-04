@@ -8,8 +8,5 @@ export async function GET({ fetch, request, locals, cookies }) {
 	}
 
 	const response = await fetch(`${PUBLIC_BACKEND_URL}/docs`);
-	console.log(response);
-	console.log(await response.json());
-
 	return response;
 }

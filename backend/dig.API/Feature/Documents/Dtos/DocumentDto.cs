@@ -5,4 +5,5 @@ public class DocumentDto
     public DocContentDto Content { get; set; }
     public string Link { get; set; }
     public string Status { get; set; }
+    public long CreatedAt { get; set; }
 }
