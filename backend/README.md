@@ -10,6 +10,12 @@ Run normally through Visual Studio or Rider.
 
 ## DB Migrations
 
+Make sure to install Entity Framework:
+
+```bash
+dotnet tool install --global dotnet-ef --version 6.*
+```
+
 Setup
 
 ```bash
