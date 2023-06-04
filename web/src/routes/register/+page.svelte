@@ -23,7 +23,7 @@
 
 		isRegistering = false;
 		if (response.redirected) {
-			goto('/');
+			goto('/app');
 		}
 		if (!response.ok) {
 			errorMessage = ((await response.json()) as SimpleErrorMessage).message;

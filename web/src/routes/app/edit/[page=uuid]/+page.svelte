@@ -4,6 +4,7 @@
 	import type { FormField } from '$lib/features/documents/FormField.js';
 	import { Label, Input, Button, Card, Progressbar } from 'flowbite-svelte';
 	import DynamicFormInput from './DynamicFormInput.svelte';
+	import ScannedDocumentView from '$lib/components/ScannedDocumentView.svelte';
 
 	export let data;
 
@@ -49,8 +50,7 @@
 		for (const formField of formFields) {
 			newDocumentMap.set(formField.label, {
 				Value: formField.value,
-				Confidence: formField.confidence,
-				MinAllowedPercent: formField.minAllowedPercent
+				Confidence: formField.confidence
 			});
 		}
 
@@ -68,7 +68,7 @@
 
 <div class="grid grid-cols-2 divide-x grow">
 	<div class="flex items-center justify-center h-full">
-		<embed src={scannedDocument.link} class="w-2/3 border rounded-lg p-4 h-full" />
+		<ScannedDocumentView scannedDocumentLink={scannedDocument.link} />
 	</div>
 	<div class="flex flex-col items-center justify-center">
 		{#if isDocumentFaulty}
