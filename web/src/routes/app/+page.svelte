@@ -1,12 +1,13 @@
 <script lang="ts">
 	import { goto } from '$app/navigation';
-	import NavBar from '$lib/components/NavBar.svelte';
-	import { Label, Card, Dropzone, Button } from 'flowbite-svelte';
+	import { Label, Card, Dropzone, Button, Spinner } from 'flowbite-svelte';
 
 	let files: FileList | undefined;
 
+	let isSendingFiles = false;
+	let sentFilesSuccessfully = false;
+
 	function sendFiles() {
-		console.log('sending files');
 		const filesFormData = new FormData();
 
 		if (!files) return;
@@ -21,8 +22,11 @@
 				mode: 'cors',
 				body: filesFormData
 			});
+			files = undefined;
+			sentFilesSuccessfully = true;
 		} catch (error) {
 			console.error(error);
+			sentFilesSuccessfully = false;
 		}
 	}
 
@@ -53,6 +57,9 @@
 
 <div class="min-h-screen m-auto flex justify-center items-center max-w-screen-md">
 	<Card class="w-96">
+		{#if sentFilesSuccessfully}
+			<Card color="green" class="mb-2">Documents uploaded!</Card>
+		{/if}
 		<Label class="pb-2">Upload Document</Label>
 		<Dropzone
 			id="dropzone"
@@ -88,6 +95,12 @@
 				{/each}
 			</div>
 		{/if}
-		<Button on:click={sendFiles} color="dark" class="mt-4">Send Files</Button>
+		<Button on:click={sendFiles} color="dark" class="mt-4">
+			{#if isSendingFiles}
+				<Spinner />
+			{:else}
+				Send Files
+			{/if}
+		</Button>
 	</Card>
 </div>
