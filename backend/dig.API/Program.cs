@@ -11,7 +11,7 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Configuration.AddEnvironmentVariables();
 
 // Add database config
-var connection = Environment.GetEnvironmentVariable("AZURE_SQL_CONNECTIONSTRING");
+var connection = Environment.GetEnvironmentVariable("AZURE_SQL_CONNECTION_STRING");
 builder.Services.AddDbContext<DigitexDb>(options => options.UseSqlServer(connection));
 
 // Add services to the container.

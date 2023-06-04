@@ -17,9 +17,10 @@ public class AzureAIService
 
         // sample document document
         Uri invoiceUri = new Uri(invoiceLink);
+        string modelName = Environment.GetEnvironmentVariable("FR_MODEL");
 
         // TODO: check if replaced with correct form recognition model
-        AnalyzeDocumentOperation operation = await client.AnalyzeDocumentFromUriAsync(WaitUntil.Completed, "tool-digitalization", invoiceUri); //prebuilt-invoice
+        AnalyzeDocumentOperation operation = await client.AnalyzeDocumentFromUriAsync(WaitUntil.Completed, modelName, invoiceUri); //prebuilt-invoice
 
         AnalyzeResult result = operation.Value;
 
@@ -63,7 +64,7 @@ public class AzureAIService
             // TODO: why not a number in Azure
             if (document.Fields.TryGetValue("TotalWithNoTax", out DocumentField totalWithNoTaxField))
             {
-                if (totalWithNoTaxField.FieldType == DocumentFieldType.String)
+                if (totalWithNoTaxField.FieldType == DocumentFieldType.Currency)
                 {
                     string totalWithNoTax = totalWithNoTaxField.Value.AsString();
                     Console.WriteLine($"Total With No Tax: '{totalWithNoTax}', with confidence {totalWithNoTaxField.Confidence}");
@@ -79,7 +80,7 @@ public class AzureAIService
             // TODO: why not a number in Azure
             if (document.Fields.TryGetValue("TotalTax", out DocumentField totalTaxField))
             {
-                if (totalTaxField.FieldType == DocumentFieldType.String)
+                if (totalTaxField.FieldType == DocumentFieldType.Currency)
                 {
                     string totalTax = totalTaxField.Value.AsString();
                     Console.WriteLine($"Total Tax: '{totalTax}', with confidence {totalTaxField.Confidence}");
