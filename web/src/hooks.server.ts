@@ -3,15 +3,26 @@ import type { User } from '$lib/features/auth/User';
 import { redirect, type Handle } from '@sveltejs/kit';
 import { sequence } from '@sveltejs/kit/hooks';
 
-export async function handleFetch({ event, request, fetch }) {
-	const sessionUserText = event.cookies.get('sessionUser');
+const unauthorizedRoutes = ['/login', 'register'];
 
-	if (request.url.startsWith(PUBLIC_BACKEND_URL) && sessionUserText !== undefined) {
-		const token = JSON.parse(sessionUserText) as User;
+export async function handleFetch({ event, request, fetch }) {
+	const sessionUserToken = event.cookies.get('sessionUser');
+
+	if (request.url.startsWith(PUBLIC_BACKEND_URL) && sessionUserToken !== undefined) {
+		const token = JSON.parse(sessionUserToken) as string;
 		request.headers.append('Authorization', 'Bearer ' + token);
 	}
 
-	return fetch(request);
+	const response = await fetch(request);
+
+	// TODO: Any unauthorized error will be considered for now as "token expired", you would check more specifically in production!
+	if (response.status === 401) {
+		console.log('deleting token');
+		event.cookies.delete('sessionUser');
+		throw redirect(302, '/login');
+	}
+
+	return response;
 }
 
 const handleAuth: Handle = async ({ event, resolve }) => {
@@ -21,12 +32,12 @@ const handleAuth: Handle = async ({ event, resolve }) => {
 const handleProtectedRoutes: Handle = async ({ event, resolve }) => {
 	const isLoggedIn = event.cookies.get('sessionUser') !== undefined;
 
-	// TODO: do not remember correct code, under time constraints, fun times :D
-	if (!isLoggedIn && event.url.pathname === '/') {
+	// TODO: do not remember correct HTTP code under time constraints, fun times :D
+	if (!isLoggedIn && !unauthorizedRoutes.includes(event.url.pathname)) {
 		throw redirect(302, '/login');
 	}
 
-	if (isLoggedIn && (event.url.pathname === '/login' || event.url.pathname === '/register')) {
+	if (isLoggedIn && unauthorizedRoutes.includes(event.url.pathname)) {
 		throw redirect(302, '/');
 	}
 
