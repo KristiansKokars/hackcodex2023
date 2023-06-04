@@ -50,7 +50,7 @@ if (app.Environment.IsDevelopment())
     });
 }
 
-app.MapGet("/", () => "Hello World!");
+app.MapGet("/", () => "Health Check!");
 app.AddAuth();
 app.AddDocuments();
 
