@@ -7,4 +7,5 @@ public class DocumentDto
     public string Link { get; set; }
     public string Status { get; set; }
     public long CreatedAt { get; set; }
+    public double MinAllowedPercent { get; set; }
 }

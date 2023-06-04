@@ -70,6 +70,7 @@ public static class DocumentRoutes
     {
         // Retrieve user
         var userId = user.Claims.First(claim => claim.Type == "Id").Value;
+        double minRequiredPrecison = 0.85;
 
         // Retrieve documents
         var docs = documentService.GetDocuments(Guid.Parse(userId));
@@ -84,6 +85,7 @@ public static class DocumentRoutes
             CreatedAt = d.CreatedAt != null 
                 ? Helpers.ConvertToUnixMillis(d.CreatedAt) 
                 : Helpers.ConvertToUnixMillis(DateTime.Now),
+            MinAllowedPercent = minRequiredPrecison,
         }).ToList();
 
         return Results.Ok(documentDtos);
@@ -97,6 +99,7 @@ public static class DocumentRoutes
     {
         // Retrieve user
         var userId = user.Claims.First(claim => claim.Type == "Id").Value;
+        double minRequiredPrecison = 0.85;
 
         // Retrieve faulty documents
         var docs = documentService.GetFaultyDocuments(Guid.Parse(userId));
@@ -110,6 +113,7 @@ public static class DocumentRoutes
             CreatedAt = d.CreatedAt != null 
                 ? Helpers.ConvertToUnixMillis(d.CreatedAt) 
                 : Helpers.ConvertToUnixMillis(DateTime.Now),
+            MinAllowedPercent = minRequiredPrecison,
         }).ToList();
 
         return Results.Ok(documentDtos);
@@ -149,6 +153,7 @@ public static class DocumentRoutes
                 CreatedAt = document.CreatedAt != null 
                     ? Helpers.ConvertToUnixMillis(document.CreatedAt) 
                     : Helpers.ConvertToUnixMillis(DateTime.Now),
+                MinAllowedPercent = minRequiredPrecison,
             };
 
             return Results.Ok(documentDto);
@@ -231,6 +236,7 @@ public static class DocumentRoutes
                         CreatedAt = document.CreatedAt != null 
                             ? Helpers.ConvertToUnixMillis(document.CreatedAt) 
                             : Helpers.ConvertToUnixMillis(DateTime.Now),
+                        MinAllowedPercent = minRequiredPrecison,
                     };
 
                     return Results.Ok(documentDtoMarked);
