@@ -1,9 +1,6 @@
 <script lang="ts">
-	import { PUBLIC_BACKEND_URL } from '$env/static/public';
 	import NavBar from '$lib/components/NavBar.svelte';
 	import {
-		Button,
-		List,
 		Table,
 		TableBody,
 		TableBodyCell,
@@ -27,8 +24,8 @@
 	}
 
 	interface DocumentRow {
-		Value: string,
-		Confidence: number
+		Value: string;
+		Confidence: number;
 	}
 
 	// interface ScanDocumentContent {
@@ -63,18 +60,10 @@
 	async function getDocuments() {
 		const response = await fetch('/list');
 		const jsonData = await response.json();
-
-		console.log(jsonData[0])
-
-		// for (const [key, value] of Object.entries(jsonData[0].content)) {
-		// 	console.log(key);
-		// }
-
-		const data = jsonData as ScanDocument[];		
-		console.log(jsonData);
+		const data = jsonData as ScanDocument[];
 
 		items = data.map((data) => {
-			const rowMark = data.status == 'Correct' ? '✅': '❌';
+			const rowMark = data.status == 'Correct' ? '✅' : '❌';
 
 			const item = {
 				mark: rowMark,
@@ -82,7 +71,7 @@
 				doc_num: data.content.invoiceId.Value,
 				// TODO: add created date in backend
 				date: data.createdAt,
-				link: data.link,
+				link: data.link
 			};
 			return item;
 		});
@@ -90,11 +79,7 @@
 
 	onMount(() => {
 		getDocuments();
-	})
-
-	$: {
-		console.log(items[0])
-	}
+	});
 
 	const sortKey = writable('id'); // default sort key
 	const sortDirection = writable(1); // default sort direction (ascending)
