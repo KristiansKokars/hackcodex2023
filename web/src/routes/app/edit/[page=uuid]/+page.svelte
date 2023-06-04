@@ -38,10 +38,6 @@
 	async function editOnBackend() {
 		await fetch(`/edit?id=${documentId}`);
 	}
-
-	$: {
-		console.log(scannedDocument.content);
-	}
 </script>
 
 <svelte:head>
@@ -66,7 +62,8 @@
 						class="h-8 rounded-none"
 						id={formField.label}
 						size="lg"
-						placeholder={formField.label}
+						placeholder={formField.value}
+						value={formField.value}
 					/>
 				</div>
 			{/each}
