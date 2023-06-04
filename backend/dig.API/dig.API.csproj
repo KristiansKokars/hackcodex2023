@@ -9,6 +9,7 @@
   <ItemGroup>
     <PackageReference Include="Azure.AI.FormRecognizer" Version="4.0.0" />
     <PackageReference Include="Azure.Storage.Blobs" Version="12.16.0" />
+    <PackageReference Include="BCrypt.Net-Next" Version="4.0.3" />
     <PackageReference Include="DotNetEnv" Version="2.5.0" />
     <PackageReference Include="Microsoft.AspNetCore.Diagnostics.EntityFrameworkCore" Version="6.0.16" />
     <PackageReference Include="Microsoft.Data.SqlClient" Version="5.1.1" />

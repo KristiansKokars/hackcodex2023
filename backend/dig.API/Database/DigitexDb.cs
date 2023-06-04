@@ -1,3 +1,4 @@
+using dig.API.Feature.Auth;
 using Microsoft.EntityFrameworkCore;
 
 public class DigitexDb : DbContext
@@ -7,4 +8,5 @@ public class DigitexDb : DbContext
 
     public DbSet<Document> Documents => Set<Document>();
     public DbSet<SystemUser> SystemUsers => Set<SystemUser>();
+    public DbSet<UserAuthKey> UserAuthKeys => Set<UserAuthKey>();
 }
