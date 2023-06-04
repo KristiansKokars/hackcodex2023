@@ -7,7 +7,7 @@ export async function POST(event) {
 		process.env.NODE_TLS_REJECT_UNAUTHORIZED = '0';
 	}
 
-	const response = await fetch(`${PUBLIC_BACKEND_URL}/upload`, {
+	const response = await event.fetch(`${PUBLIC_BACKEND_URL}/upload`, {
 		method: 'POST',
 		mode: 'cors',
 		body: await event.request.formData()

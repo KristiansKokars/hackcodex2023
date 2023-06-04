@@ -1,17 +1,16 @@
 import { PUBLIC_BACKEND_URL } from '$env/static/public';
+import type { User } from '$lib/features/auth/User';
 import { redirect, type Handle } from '@sveltejs/kit';
 import { sequence } from '@sveltejs/kit/hooks';
-import cookie from 'cookie';
 
 export async function handleFetch({ event, request, fetch }) {
-	if (request.url.startsWith(PUBLIC_BACKEND_URL)) {
-		console.log('SETTING COOKIE!!');
-		const cookieHeaders = request.headers.get('Set-Cookie');
-		if (cookieHeaders !== null) {
-			const aspNetCookie = cookie.parse(cookieHeaders)['.AspNetCore.cookie'] as string;
-			console.log(aspNetCookie);
-			request.headers.set('.AspNetCore.cookie', aspNetCookie);
-		}
+	const sessionUserText = event.cookies.get('sessionUser');
+
+	console.log(sessionUserText);
+	if (request.url.startsWith(PUBLIC_BACKEND_URL) && sessionUserText !== undefined) {
+		const token = JSON.parse(sessionUserText) as User;
+		console.log(token);
+		request.headers.append('Authorization', 'Bearer ' + token);
 	}
 
 	return fetch(request);
@@ -22,15 +21,14 @@ const handleAuth: Handle = async ({ event, resolve }) => {
 };
 
 const handleProtectedRoutes: Handle = async ({ event, resolve }) => {
-	// TODO: handle reauthentication with server!
-	const cookie = event.cookies.get('.AspNetCore.cookie');
+	const isLoggedIn = event.cookies.get('sessionUser') !== undefined;
 
 	// TODO: do not remember correct code, under time constraints, fun times :D
-	if (!cookie && event.url.pathname === '/') {
+	if (!isLoggedIn && event.url.pathname === '/') {
 		throw redirect(302, '/login');
 	}
 
-	if (cookie && (event.url.pathname === '/login' || event.url.pathname === '/register')) {
+	if (isLoggedIn && (event.url.pathname === '/login' || event.url.pathname === '/register')) {
 		throw redirect(302, '/');
 	}
 

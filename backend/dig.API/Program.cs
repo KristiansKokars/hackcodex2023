@@ -1,7 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.OpenApi.Models;
 using Swashbuckle.AspNetCore.SwaggerUI;
-using System.Text.Json.Serialization;
 using dig.API.Feature.Auth;
 using dig.API.Feature.Documents;
 
@@ -52,7 +51,7 @@ if (app.Environment.IsDevelopment())
 }
 
 app.MapGet("/", () => "Hello World!");
-app.AddDocuments();
 app.AddAuth();
+app.AddDocuments();
 
 app.Run();
