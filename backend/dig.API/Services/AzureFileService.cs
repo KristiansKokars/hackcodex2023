@@ -38,27 +38,32 @@ public class AzureFileService
 
     public static async Task<Either<SimpleMessageError, string>> RetrieveJSONFromStorage(string fileName)
     {
-        var connectionString = Environment.GetEnvironmentVariable("FR_BLOB_CONNECTION_STRING");
-        BlobServiceClient blobServiceClient = new BlobServiceClient(connectionString);
+        // TODO: return back in prod
 
-        var containerName = Environment.GetEnvironmentVariable("FR_CONTAINER");
-        if (containerName is null)
-        {
-            return new Either<SimpleMessageError, string>(new SimpleMessageError("Failed to retrieve container name from ENV!"));
-        }
+        // var connectionString = Environment.GetEnvironmentVariable("FR_BLOB_CONNECTION_STRING");
+        // BlobServiceClient blobServiceClient = new BlobServiceClient(connectionString);
 
-        BlobContainerClient containerClient = blobServiceClient.GetBlobContainerClient(containerName);
-        BlobClient blobClient = containerClient.GetBlobClient(fileName);
+        // var containerName = Environment.GetEnvironmentVariable("FR_CONTAINER");
+        // if (containerName is null)
+        // {
+        //     return new Either<SimpleMessageError, string>(new SimpleMessageError("Failed to retrieve container name from ENV!"));
+        // }
 
-        var response = await blobClient.DownloadAsync();
-        if (response is null)
-        {
-            return new Either<SimpleMessageError, string>(new SimpleMessageError("Failed to download JSON document!"));
-        }
+        // BlobContainerClient containerClient = blobServiceClient.GetBlobContainerClient(containerName);
+        // BlobClient blobClient = containerClient.GetBlobClient(fileName);
 
-        using StreamReader streamReader = new StreamReader(response.Value.Content);
-        var jsonContent = await streamReader.ReadToEndAsync();
+        // var response = await blobClient.DownloadAsync();
+        // if (response is null)
+        // {
+        //     return new Either<SimpleMessageError, string>(new SimpleMessageError("Failed to download JSON document!"));
+        // }
 
-        return new Either<SimpleMessageError, string>(jsonContent);
+        // using StreamReader streamReader = new StreamReader(response.Value.Content);
+        // var jsonContent = await streamReader.ReadToEndAsync();
+
+        // return new Either<SimpleMessageError, string>(jsonContent);
+        // TODO: remove in prod
+
+        return new Either<SimpleMessageError, string>("hello");
     }
 }

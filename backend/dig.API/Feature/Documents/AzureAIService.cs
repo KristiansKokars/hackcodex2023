@@ -44,6 +44,11 @@ public class AzureAIService
 
         AnalyzeResult result = operation.Value;
 
+        // Prepare .labels.json file
+        // TODO: https://learn.microsoft.com/en-us/dotnet/api/azure.ai.formrecognizer.documentanalysis.analyzeresult?view=azure-dotnet
+        // take a look into Documents properties
+
+        // Read document contents
         Console.WriteLine("\n Document analysis result: \n");
         Console.WriteLine(result.KeyValuePairs);
         Console.WriteLine();
