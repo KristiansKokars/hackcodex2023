@@ -76,6 +76,8 @@ public static class DocumentRoutes
         var documentDtos = docs.Select(d => new DocumentDto
         {
             Id = d.Id,
+            // TODO: recheck
+            InvoiceId = JsonSerializer.Deserialize<DocIdDto>(d.Content)!.InvoiceId["Value"].ToString()!,
             Content = JsonSerializer.Deserialize<DocContentDto>(d.Content)!,
             Link = d.Link,
             Status = d.Status,
@@ -101,6 +103,7 @@ public static class DocumentRoutes
         var documentDtos = docs.Select(d => new DocumentDto
         {
             Id = d.Id,
+            InvoiceId = JsonSerializer.Deserialize<DocIdDto>(d.Content)!.InvoiceId["Value"].ToString()!,
             Content = JsonSerializer.Deserialize<DocContentDto>(d.Content)!,
             Link = d.Link,
             Status = d.Status,
@@ -139,6 +142,7 @@ public static class DocumentRoutes
             var documentDto = new DocumentDto
             {
                 Id = document.Id,
+                InvoiceId = JsonSerializer.Deserialize<DocIdDto>(document.Content)!.InvoiceId["Value"].ToString()!,
                 Content = JsonSerializer.Deserialize<DocContentDto>(document.Content)!,
                 Link = document.Link,
                 Status = document.Status,
@@ -153,6 +157,8 @@ public static class DocumentRoutes
         {
             var labelsLink = document.Link + ".labels.json";
 
+            // TODO: resolve why document not found
+            // TODO: remove workaround in prod
             var labelsJSONResult = await AzureFileService.RetrieveJSONFromStorage(labelsLink);
             return labelsJSONResult.Map<IResult>(
                 error: error => 
@@ -160,41 +166,57 @@ public static class DocumentRoutes
                     // TODO: in production, find way to return 500 Internal server error
                     return Results.BadRequest(error);
                 },
+                // TODO: remember about 'hello'
                 success: labelsJSON =>
                 {
-                    var labelDocument = JsonSerializer.Deserialize<DocLabelsDto>(labelsJSON);
+                    // var labelDocument = JsonSerializer.Deserialize<DocLabelsDto>(labelsJSON);
                     var documentContent = JsonSerializer.Deserialize<Dictionary<string, Dictionary<string, object>>>(document.Content);
+
+                    // TODO: remove in prod
+                    Console.WriteLine("RETRIEVED CONTENT:");
+                    Console.WriteLine(document.Content);
+                    Console.WriteLine();
+
+                    string? invoiceId = null;
 
                     var documentContentMarked = new Dictionary<string, Dictionary<string, object>>();
                     foreach (var documentRow in documentContent!)
                     {
                         var name = documentRow.Key;
                         var rowContent = documentRow.Value;
-
                         var fieldValue = rowContent["Value"];
-                        var fieldConfidence = (double)rowContent["Confidence"];
+                        var fieldConfidence = Convert.ToDouble(float.Parse(rowContent["Confidence"].ToString()));
 
-                        if (fieldConfidence < minRequiredPrecison)
+                        if (name == "InvoiceId")
                         {
-                            var documentFieldValue = new Dictionary<string, object>();
-                            documentFieldValue.Add("Value", fieldValue);
-                            documentFieldValue.Add("Confidence", fieldConfidence);
-                    
-                            var fieldLabels = labelDocument!.Labels
-                                .SelectMany(label => label.Value)
-                                .SelectMany(labelList => labelList.BoundingBoxes)
-                                .Select(box => box)
-                                .ToList();
-                    
-                            documentFieldValue.Add("Labels", fieldLabels);
-
-                            documentContentMarked.Add(name, documentFieldValue);
+                            invoiceId = fieldValue.ToString();
                         }
                         else
                         {
+                            // TODO: implement and resolve label issues
+
+                            // if (fieldConfidence < minRequiredPrecison)
+                            // {
+                            //     var documentFieldValue = new Dictionary<string, object>();
+                            //     documentFieldValue.Add("Value", fieldValue);
+                            //     documentFieldValue.Add("Confidence", fieldConfidence);
+                    
+                            //     var fieldLabels = labelDocument!.Labels
+                            //         .SelectMany(label => label.Value)
+                            //         .SelectMany(labelList => labelList.BoundingBoxes)
+                            //         .Select(box => box)
+                            //         .ToList();
+                    
+                            //     documentFieldValue.Add("Labels", fieldLabels);
+
+                            //     documentContentMarked.Add(name, documentFieldValue);
+                            // }
+                            // else
+                            // {
                             documentContentMarked.Add(documentRow.Key, documentRow.Value);
+                            // }
+                            Console.WriteLine($"Row: {name}, Value: {fieldValue}, %: {fieldConfidence}");
                         }
-                        Console.WriteLine($"Row: {name}, Value: {fieldValue}, %: {fieldConfidence}");
                     }
 
                     var contentMarkedJSON = JsonSerializer.Serialize(documentContentMarked);
@@ -202,6 +224,7 @@ public static class DocumentRoutes
                     var documentDtoMarked = new DocumentDto
                     {
                         Id = document.Id,
+                        InvoiceId = invoiceId!,
                         Content = JsonSerializer.Deserialize<DocContentDto>(contentMarkedJSON)!,
                         Link = document.Link,
                         Status = document.Status,

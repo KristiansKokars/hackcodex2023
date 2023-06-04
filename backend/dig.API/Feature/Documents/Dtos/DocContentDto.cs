@@ -1,7 +1,6 @@
 public class DocContentDto
 {
     public object InvoiceDate { get; set; }
-    public object InvoiceId { get; set; }
     public object TotalWithNoTax { get; set; }
     public object TotalTax { get; set; }
     public object Total { get; set; }
@@ -17,4 +16,9 @@ public class DocContentDto
     public object VendorPVNnum { get; set; }
     public object BuyerPVNnum { get; set; }
     public object PhysicalBuyerName { get; set; }
+}
+
+public class DocIdDto
+{
+    public Dictionary<string, object> InvoiceId { get; set; }
 }
