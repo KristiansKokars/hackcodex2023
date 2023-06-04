@@ -1,6 +1,7 @@
 using System.Text.Json;
 using System.Linq;
 using System.Security.Claims;
+using Microsoft.AspNetCore.Authorization;
 
 namespace dig.API.Feature.Documents;
 
@@ -22,24 +23,18 @@ public static class DocumentRoutes
     }
 
     // piem, jāposto uz localhost:7050/resolve/f5156900-0253-11ee-be56-0242ac120002
-    private static async Task<IResult> Resolve(HttpContext context, string id)
+    [Authorize]
+    private static async Task<IResult> Resolve(
+        HttpContext context, 
+        string id,
+        ClaimsPrincipal user)
     {
         Console.WriteLine($"Document id: {id}");
         var documentId = Guid.Parse(id);
         var docService = context.RequestServices.GetRequiredService<DocumentService>();
 
         // Retrieve user
-        var claimIdentity = context.User.Identity as ClaimsIdentity;
-        var userId = String.Empty;
-        if (claimIdentity!.FindFirst("id") != null)
-        { 
-            userId = claimIdentity.FindFirst("id")!.Value;
-            Console.WriteLine($"User id: {userId}");
-        }
-        else
-        {
-            return Results.Unauthorized();
-        }
+        var userId = user.Claims.First(claim => claim.Type == "Id").Value;
 
         // Read the request body
         using var reader = new StreamReader(context.Request.Body);
@@ -67,20 +62,14 @@ public static class DocumentRoutes
     }
 
     // TODO: consider one endpoint for docs + filtering
-    private static IResult GetDocuments(HttpContext context, DocumentService documentService)
+    [Authorize]
+    private static IResult GetDocuments(
+        HttpContext context, 
+        DocumentService documentService,
+        ClaimsPrincipal user)
     {
         // Retrieve user
-        var claimIdentity = context.User.Identity as ClaimsIdentity;
-        var userId = String.Empty;
-        if (claimIdentity!.FindFirst("id") != null)
-        { 
-            userId = claimIdentity.FindFirst("id")!.Value;
-            Console.WriteLine($"User id: {userId}");
-        }
-        else
-        {
-            return Results.Unauthorized();
-        }
+        var userId = user.Claims.First(claim => claim.Type == "Id").Value;
 
         // Retrieve documents
         var docs = documentService.GetDocuments(Guid.Parse(userId));
@@ -95,20 +84,14 @@ public static class DocumentRoutes
         return Results.Ok(documentDtos);
     }
 
-    private static IResult GetFaultyDocuments(HttpContext context, DocumentService documentService)
+    [Authorize]
+    private static IResult GetFaultyDocuments(
+        HttpContext context, 
+        DocumentService documentService,
+        ClaimsPrincipal user)
     {
         // Retrieve user
-        var claimIdentity = context.User.Identity as ClaimsIdentity;
-        var userId = String.Empty;
-        if (claimIdentity!.FindFirst("id") != null)
-        { 
-            userId = claimIdentity.FindFirst("id")!.Value;
-            Console.WriteLine($"User id: {userId}");
-        }
-        else
-        {
-            return Results.Unauthorized();
-        }
+        var userId = user.Claims.First(claim => claim.Type == "Id").Value;
 
         // Retrieve faulty documents
         var docs = documentService.GetFaultyDocuments(Guid.Parse(userId));
@@ -123,10 +106,12 @@ public static class DocumentRoutes
         return Results.Ok(documentDtos);
     }
 
+    [Authorize]
     private static async Task<IResult> GetDocumentById(
         HttpContext context, 
         string id, 
-        DocumentService documentService)
+        DocumentService documentService,
+        ClaimsPrincipal user)
     {
         Console.WriteLine($"Document id: {id}");
         var documentId = Guid.Parse(id);
@@ -135,17 +120,7 @@ public static class DocumentRoutes
         double minRequiredPrecison = 0.85;
         
         // Retrieve user
-        var claimIdentity = context.User.Identity as ClaimsIdentity;
-        var userId = String.Empty;
-        if (claimIdentity!.FindFirst("id") != null)
-        { 
-            userId = claimIdentity.FindFirst("id")!.Value;
-            Console.WriteLine($"User id: {userId}");
-        }
-        else
-        {
-            return Results.Unauthorized();
-        }
+        var userId = user.Claims.First(claim => claim.Type == "Id").Value;
 
         var document = documentService.GetDocumentById(Guid.Parse(userId), documentId);
         if (document is null)
@@ -229,7 +204,11 @@ public static class DocumentRoutes
         }
     }
 
-    private static async Task<IResult> Upload(HttpContext context, DocumentService documentService)
+    [Authorize]
+    private static async Task<IResult> Upload(
+        HttpContext context, 
+        DocumentService documentService,
+        ClaimsPrincipal user)
     {
         Console.WriteLine(context.User);
 
@@ -240,17 +219,7 @@ public static class DocumentRoutes
         double minRequiredPrecison = 0.85;
         
         // Retrieve user
-        var claimIdentity = context.User.Identity as ClaimsIdentity;
-        var userId = String.Empty;
-        if (claimIdentity!.FindFirst("id") != null)
-        { 
-            userId = claimIdentity.FindFirst("id")!.Value;
-            Console.WriteLine($"User id: {userId}");
-        }
-        else
-        {
-            return Results.Unauthorized();
-        }
+        var userId = user.Claims.First(claim => claim.Type == "Id").Value;
 
         var filesToInsert = new List<Document>();
 
