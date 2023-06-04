@@ -16,9 +16,6 @@ jobs:
     steps:
       - uses: actions/checkout@v2
 
-      - name: Go to backend folder
-        run: cd backend
-
       - name: Set up .NET Core
         uses: actions/setup-dotnet@v1
         with:
@@ -26,9 +23,11 @@ jobs:
           include-prerelease: true
 
       - name: Build with dotnet
+        working-directory: ./backend
         run: dotnet build --configuration Release
 
       - name: dotnet publish
+        working-directory: ./backend
         run: dotnet publish -c Release -o ${{env.DOTNET_ROOT}}/myapp
 
       - name: Upload artifact for deployment job
