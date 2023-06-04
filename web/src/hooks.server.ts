@@ -6,10 +6,8 @@ import { sequence } from '@sveltejs/kit/hooks';
 export async function handleFetch({ event, request, fetch }) {
 	const sessionUserText = event.cookies.get('sessionUser');
 
-	console.log(sessionUserText);
 	if (request.url.startsWith(PUBLIC_BACKEND_URL) && sessionUserText !== undefined) {
 		const token = JSON.parse(sessionUserText) as User;
-		console.log(token);
 		request.headers.append('Authorization', 'Bearer ' + token);
 	}
 
