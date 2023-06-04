@@ -1,5 +1,6 @@
 using System.Text.Json;
 using System.Linq;
+using System.Security.Claims;
 
 namespace dig.API.Feature.Documents;
 
@@ -27,7 +28,20 @@ public static class DocumentRoutes
         var documentId = Guid.Parse(id);
         var docService = context.RequestServices.GetRequiredService<DocumentService>();
 
-        // Read the request body as a string
+        // Retrieve user
+        var claimIdentity = context.User.Identity as ClaimsIdentity;
+        var userId = String.Empty;
+        if (claimIdentity!.FindFirst("id") != null)
+        { 
+            userId = claimIdentity.FindFirst("id")!.Value;
+            Console.WriteLine($"User id: {userId}");
+        }
+        else
+        {
+            return Results.Unauthorized();
+        }
+
+        // Read the request body
         using var reader = new StreamReader(context.Request.Body);
         var requestBody = await reader.ReadToEndAsync();
 
@@ -37,7 +51,11 @@ public static class DocumentRoutes
 
             // TODO: evaluate if format correct
 
-            var resolved = docService.MarkDocumentSolved(documentId, JsonSerializer.Serialize(docContents));
+            var resolved = docService.MarkDocumentSolved(
+                Guid.Parse(userId), 
+                documentId, 
+                JsonSerializer.Serialize(docContents));
+
             Console.WriteLine($"Resolved doc id: {resolved}");
             return Results.Ok(resolved);
         }
@@ -51,12 +69,25 @@ public static class DocumentRoutes
     // TODO: consider one endpoint for docs + filtering
     private static IResult GetDocuments(HttpContext context, DocumentService documentService)
     {
-        // TODO: include user ID
-        var docs = documentService.GetDocuments();
+        // Retrieve user
+        var claimIdentity = context.User.Identity as ClaimsIdentity;
+        var userId = String.Empty;
+        if (claimIdentity!.FindFirst("id") != null)
+        { 
+            userId = claimIdentity.FindFirst("id")!.Value;
+            Console.WriteLine($"User id: {userId}");
+        }
+        else
+        {
+            return Results.Unauthorized();
+        }
+
+        // Retrieve documents
+        var docs = documentService.GetDocuments(Guid.Parse(userId));
         var documentDtos = docs.Select(d => new DocumentDto
         {
             Id = d.Id,
-            Content = JsonSerializer.Deserialize<DocContentDto>(d.Content),
+            Content = JsonSerializer.Deserialize<DocContentDto>(d.Content)!,
             Link = d.Link,
             Status = d.Status
         }).ToList();
@@ -64,14 +95,27 @@ public static class DocumentRoutes
         return Results.Ok(documentDtos);
     }
 
-    private static async Task<IResult> GetFaultyDocuments(HttpContext context, DocumentService documentService)
+    private static IResult GetFaultyDocuments(HttpContext context, DocumentService documentService)
     {
-        // TODO: include user ID
-        var docs = documentService.GetFaultyDocuments();
+        // Retrieve user
+        var claimIdentity = context.User.Identity as ClaimsIdentity;
+        var userId = String.Empty;
+        if (claimIdentity!.FindFirst("id") != null)
+        { 
+            userId = claimIdentity.FindFirst("id")!.Value;
+            Console.WriteLine($"User id: {userId}");
+        }
+        else
+        {
+            return Results.Unauthorized();
+        }
+
+        // Retrieve faulty documents
+        var docs = documentService.GetFaultyDocuments(Guid.Parse(userId));
         var documentDtos = docs.Select(d => new DocumentDto
         {
             Id = d.Id,
-            Content = JsonSerializer.Deserialize<DocContentDto>(d.Content),
+            Content = JsonSerializer.Deserialize<DocContentDto>(d.Content)!,
             Link = d.Link,
             Status = d.Status
         }).ToList();
@@ -79,7 +123,6 @@ public static class DocumentRoutes
         return Results.Ok(documentDtos);
     }
 
-    // TODO: include also link to .labels.json doc
     private static async Task<IResult> GetDocumentById(
         HttpContext context, 
         string id, 
@@ -88,18 +131,34 @@ public static class DocumentRoutes
         Console.WriteLine($"Document id: {id}");
         var documentId = Guid.Parse(id);
 
-        // TODO: receive from request (or store in config?)
+        // TODO: receive precision from request (or store in config?)
         double minRequiredPrecison = 0.85;
-        Guid userId = Guid.NewGuid();
+        
+        // Retrieve user
+        var claimIdentity = context.User.Identity as ClaimsIdentity;
+        var userId = String.Empty;
+        if (claimIdentity!.FindFirst("id") != null)
+        { 
+            userId = claimIdentity.FindFirst("id")!.Value;
+            Console.WriteLine($"User id: {userId}");
+        }
+        else
+        {
+            return Results.Unauthorized();
+        }
 
-        // TODO: include user ID
-        var document = documentService.GetDocumentById(documentId);
+        var document = documentService.GetDocumentById(Guid.Parse(userId), documentId);
+        if (document is null)
+        {
+            return Results.NotFound($"Document with id: '{userId}' not found!");
+        }
+
         if (document.Status == "Correct")
         {
             var documentDto = new DocumentDto
             {
                 Id = document.Id,
-                Content = JsonSerializer.Deserialize<DocContentDto>(document.Content),
+                Content = JsonSerializer.Deserialize<DocContentDto>(document.Content)!,
                 Link = document.Link,
                 Status = document.Status
             };
@@ -110,54 +169,63 @@ public static class DocumentRoutes
         {
             var labelsLink = document.Link + ".labels.json";
 
-            // TODO: error handling here
-            var labelsJSON = await AzureFileService.RetrieveJSONFromStorage(labelsLink);
-            var labelDocument = JsonSerializer.Deserialize<DocLabelsDto>(labelsJSON);
-            var documentContent = JsonSerializer.Deserialize<Dictionary<string, Dictionary<string, object>>>(document.Content);
-
-            var documentContentMarked = new Dictionary<string, Dictionary<string, object>>();
-            foreach (var documentRow in documentContent)
-            {
-                var name = documentRow.Key;
-                var rowContent = documentRow.Value;
-
-                var fieldValue = rowContent["Value"];
-                var fieldConfidence = (double)rowContent["Confidence"];
-
-                if (fieldConfidence < minRequiredPrecison)
+            var labelsJSONResult = await AzureFileService.RetrieveJSONFromStorage(labelsLink);
+            return labelsJSONResult.Map<IResult>(
+                error: error => 
                 {
-                    var documentFieldValue = new Dictionary<string, object>();
-                    documentFieldValue.Add("Value", fieldValue);
-                    documentFieldValue.Add("Confidence", fieldConfidence);
-                    
-                    var fieldLabels = labelDocument.Labels
-                        .SelectMany(label => label.Value)
-                        .SelectMany(labelList => labelList.BoundingBoxes)
-                        .Select(box => box)
-                        .ToList();
-                    
-                    documentFieldValue.Add("Labels", fieldLabels);
-
-                    documentContentMarked.Add(name, documentFieldValue);
-                }
-                else
+                    // TODO: in production, find way to return 500 Internal server error
+                    return Results.BadRequest(error);
+                },
+                success: labelsJSON =>
                 {
-                    documentContentMarked.Add(documentRow.Key, documentRow.Value);
+                    var labelDocument = JsonSerializer.Deserialize<DocLabelsDto>(labelsJSON);
+                    var documentContent = JsonSerializer.Deserialize<Dictionary<string, Dictionary<string, object>>>(document.Content);
+
+                    var documentContentMarked = new Dictionary<string, Dictionary<string, object>>();
+                    foreach (var documentRow in documentContent!)
+                    {
+                        var name = documentRow.Key;
+                        var rowContent = documentRow.Value;
+
+                        var fieldValue = rowContent["Value"];
+                        var fieldConfidence = (double)rowContent["Confidence"];
+
+                        if (fieldConfidence < minRequiredPrecison)
+                        {
+                            var documentFieldValue = new Dictionary<string, object>();
+                            documentFieldValue.Add("Value", fieldValue);
+                            documentFieldValue.Add("Confidence", fieldConfidence);
+                    
+                            var fieldLabels = labelDocument!.Labels
+                                .SelectMany(label => label.Value)
+                                .SelectMany(labelList => labelList.BoundingBoxes)
+                                .Select(box => box)
+                                .ToList();
+                    
+                            documentFieldValue.Add("Labels", fieldLabels);
+
+                            documentContentMarked.Add(name, documentFieldValue);
+                        }
+                        else
+                        {
+                            documentContentMarked.Add(documentRow.Key, documentRow.Value);
+                        }
+                        Console.WriteLine($"Row: {name}, Value: {fieldValue}, %: {fieldConfidence}");
+                    }
+
+                    var contentMarkedJSON = JsonSerializer.Serialize(documentContentMarked);
+
+                    var documentDtoMarked = new DocumentDto
+                    {
+                        Id = document.Id,
+                        Content = JsonSerializer.Deserialize<DocContentDto>(contentMarkedJSON)!,
+                        Link = document.Link,
+                        Status = document.Status
+                    };
+
+                    return Results.Ok(documentDtoMarked);
                 }
-                Console.WriteLine($"Row: {name}, Value: {fieldValue}, %: {fieldConfidence}");
-            }
-
-            var contentMarkedJSON = JsonSerializer.Serialize(documentContentMarked);
-
-            var documentDtoMarked = new DocumentDto
-            {
-                Id = document.Id,
-                Content = JsonSerializer.Deserialize<DocContentDto>(contentMarkedJSON),
-                Link = document.Link,
-                Status = document.Status
-            };
-
-            return Results.Ok(documentDtoMarked);
+            );
         }
     }
 
@@ -170,18 +238,69 @@ public static class DocumentRoutes
 
         // TODO: receive from request (or store in config?)
         double minRequiredPrecison = 0.85;
-        Guid userId = Guid.NewGuid();
+        
+        // Retrieve user
+        var claimIdentity = context.User.Identity as ClaimsIdentity;
+        var userId = String.Empty;
+        if (claimIdentity!.FindFirst("id") != null)
+        { 
+            userId = claimIdentity.FindFirst("id")!.Value;
+            Console.WriteLine($"User id: {userId}");
+        }
+        else
+        {
+            return Results.Unauthorized();
+        }
 
         var filesToInsert = new List<Document>();
 
         foreach (var file in files)
         {
-            // TODO: error handling here
-            var fileName = await AzureFileService.SaveFileToStorage(file);
+            var fileNameResult = await AzureFileService.SaveFileToStorage(file);
+
+            // TODO: refactoring
+            var fileNameError = false;
+            var fileName = fileNameResult.Map<string>(
+                error: error => 
+                {
+                    fileNameError = true;
+                    return error.message;
+                },
+                success: value => {
+                    return value;
+                }
+            );
+
+            if (fileNameError)
+            {
+                // TODO: in production, find way to return 500 Internal server error
+                return Results.BadRequest(fileName);
+            }
+
             Console.WriteLine("File name: " + fileName);
 
-            // TODO: error handling here
-            var req = await AzureAIService.RecognizeInvoiceModel(fileName);
+            // TODO: refactoring
+            var recognitionResult = await AzureAIService.RecognizeInvoiceModel(fileName);
+
+            var recognitionError = false;
+            var reqMaybe = fileNameResult.Map<object>(
+                error: error => 
+                {
+                    recognitionError = true;
+                    return error;
+                },
+                success: value => {
+                    return value;
+                }
+            );
+
+            if (recognitionError)
+            {
+                // TODO: in production, find way to return 500 Internal server error
+                return Results.BadRequest((Common.SimpleMessageError) reqMaybe);
+            }
+
+            var req = (Dictionary<string, Dictionary<string, object>>) reqMaybe;
             var docStatus = "Correct";
 
             foreach (var documentRow in req)
@@ -201,15 +320,22 @@ public static class DocumentRoutes
             }
 
             var content = JsonSerializer.Serialize(req);
-            var doc = documentService.DocumentHelper(content, userId, fileName, docStatus);
+            var doc = documentService.DocumentHelper(content, Guid.Parse(userId), fileName, docStatus);
 
             filesToInsert.Add(doc);
             fileNames.Add(fileName);
         }
 
-        // TODO: error handling here
-        var ids = documentService.SaveDocumentBatch(filesToInsert);
-        // TODO: determine response content
-        return Results.Ok(fileNames);
+        // TODO: refactoring
+        try
+        {
+            var ids = documentService.SaveDocumentBatch(filesToInsert);
+            return Results.Ok(fileNames);
+        }
+        catch (Exception e)
+        {
+            // TODO: in production, find way to return 500 Internal server error
+            return Results.BadRequest($"Failed to save document: {e.Message}");
+        }
     }
 }

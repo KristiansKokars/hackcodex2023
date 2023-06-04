@@ -1,15 +1,27 @@
 using Azure;
 using Azure.AI.FormRecognizer.DocumentAnalysis;
+using dig.API.Common;
+using dig.API.Feature.Auth;
 
 public class AzureAIService
 {
     // sample url: "https://github.com/Azure-Samples/cognitive-services-REST-api-samples/raw/master/curl/form-recognizer/rest-api/invoice.pdf"
 
-    public static async Task<Dictionary<string, Dictionary<string, object>>> RecognizeInvoiceModel(string invoiceLink)
+    public static async Task<Either<SimpleMessageError, Dictionary<string, Dictionary<string, object>>>> RecognizeInvoiceModel(string invoiceLink)
     {
         Console.WriteLine($"Azure AI Service Invoice Link: ${invoiceLink}");
-        string key = Environment.GetEnvironmentVariable("FR_KEY");
-        string endpoint = Environment.GetEnvironmentVariable("FR_ENDPOINT");
+        var key = Environment.GetEnvironmentVariable("FR_KEY");
+        if (key is null)
+        {
+            return new Either<SimpleMessageError, Dictionary<string, Dictionary<string, object>>>(new SimpleMessageError("Failed to retrieve Azure AI key from ENV!"));
+        }
+
+        var endpoint = Environment.GetEnvironmentVariable("FR_ENDPOINT");
+        if (endpoint is null)
+        {
+            return new Either<SimpleMessageError, Dictionary<string, Dictionary<string, object>>>(new SimpleMessageError("Failed to retrieve Azure AI endpoint from ENV!"));
+        }
+
         AzureKeyCredential credential = new AzureKeyCredential(key);
         DocumentAnalysisClient client = new DocumentAnalysisClient(new Uri(endpoint), credential);
 
@@ -17,10 +29,18 @@ public class AzureAIService
 
         // sample document document
         Uri invoiceUri = new Uri(invoiceLink);
-        string modelName = Environment.GetEnvironmentVariable("FR_MODEL");
+        var modelName = Environment.GetEnvironmentVariable("FR_MODEL");
+        if (modelName is null)
+        {
+            return new Either<SimpleMessageError, Dictionary<string, Dictionary<string, object>>>(new SimpleMessageError("Failed to retrieve Azure AI model name from ENV!"));
+        }
 
         // TODO: check if replaced with correct form recognition model
         AnalyzeDocumentOperation operation = await client.AnalyzeDocumentFromUriAsync(WaitUntil.Completed, modelName, invoiceUri); //prebuilt-invoice
+        if (!operation.HasValue)
+        {
+            return new Either<SimpleMessageError, Dictionary<string, Dictionary<string, object>>>(new SimpleMessageError("Document analysis with Azure AI failed!"));
+        }
 
         AnalyzeResult result = operation.Value;
 
@@ -61,7 +81,6 @@ public class AzureAIService
             }
 
             // retrieving Total With No Tax
-            // TODO: why not a number in Azure
             if (document.Fields.TryGetValue("TotalWithNoTax", out DocumentField totalWithNoTaxField))
             {
                 if (totalWithNoTaxField.FieldType == DocumentFieldType.Currency)
@@ -77,7 +96,6 @@ public class AzureAIService
             }
 
             // retrieving Total Tax
-            // TODO: why not a number in Azure
             if (document.Fields.TryGetValue("TotalTax", out DocumentField totalTaxField))
             {
                 if (totalTaxField.FieldType == DocumentFieldType.Currency)
@@ -288,6 +306,6 @@ public class AzureAIService
             }
         }
 
-        return invoiceFields;
+        return new Either<SimpleMessageError, Dictionary<string, Dictionary<string, object>>>(invoiceFields);
     }
 }

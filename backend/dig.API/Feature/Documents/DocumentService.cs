@@ -79,9 +79,12 @@ public class DocumentService
         return document;
     }
 
-    public Guid MarkDocumentSolved(Guid documentId, string updatedContent)
+    public Guid MarkDocumentSolved(Guid userId, Guid documentId, string updatedContent)
     {
-        var documentToUpdate = _db.Documents.Where(d => d.Id == documentId).FirstOrDefault();
+        var documentToUpdate = _db.Documents
+            .Where(d => d.UserId == userId)
+            .Where(d => d.Id == documentId).FirstOrDefault();
+
         documentToUpdate.Content = updatedContent;
         documentToUpdate.Status = "Correct";
         _db.Documents.Update(documentToUpdate);
