@@ -1,7 +1,8 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.OpenApi.Models;
 using Swashbuckle.AspNetCore.SwaggerUI;
-using System.Text.Json;
+using System.Text.Json.Serialization;
+using dig.API.Feature.Auth;
 using dig.API.Feature.Documents;
 
 DotNetEnv.Env.Load();
@@ -25,6 +26,8 @@ builder.Services.AddCors(options =>
 });
 
 builder.AddDocumentDependencies();
+builder.EnableCookieAuthAndAddDependencies();
+
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen(c =>
@@ -50,5 +53,6 @@ if (app.Environment.IsDevelopment())
 
 app.MapGet("/", () => "Hello World!");
 app.AddDocuments();
+app.AddAuth();
 
 app.Run();

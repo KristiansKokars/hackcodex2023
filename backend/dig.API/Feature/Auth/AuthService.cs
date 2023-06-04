@@ -13,10 +13,10 @@ public class AuthService : IAuthService
         _db = db;
     }
 
-    public async Task<Either<SimpleMessageError, UserDto>> Login(string email, string password)
+    public async Task<Either<SimpleMessageError, UserDto>> Login(string username, string password)
     {
         var user = await _db.SystemUsers
-            .Where(user => user.Email == email)
+            .Where(user => user.Username == username)
             .Include(user => user.AuthKey)
             .SingleOrDefaultAsync();
 
@@ -36,20 +36,20 @@ public class AuthService : IAuthService
         return new Either<SimpleMessageError, UserDto>(new UserDto(user.Id.ToString(), user.Username));
     }
 
-    public async Task<Either<SimpleMessageError, UserDto>> Register(string username, string email, string password)
+    public async Task<Either<SimpleMessageError, UserDto>> Register(string username, string password)
     {
         // TODO: temporary manual check, usually our database would take care of this
         var existingUser = await _db.SystemUsers
-            .Where(user => user.Email == email)
+            .Where(user => user.Username == username)
             .SingleOrDefaultAsync();
 
         if (existingUser is not null)
         {
-            return new Either<SimpleMessageError, UserDto>(new SimpleMessageError("User already exists with e-mail!"));
+            return new Either<SimpleMessageError, UserDto>(new SimpleMessageError("User already exists with this name!"));
         }
         
         var hashedPassword = BC.HashPassword(password);
-        var userId = new Guid();
+        var userId = Guid.NewGuid();
         var authKey = new UserAuthKey
         {
             Id = userId,
@@ -58,7 +58,6 @@ public class AuthService : IAuthService
         var systemUser = new SystemUser
         {
             Id = userId,
-            Email = email,
             Username = username,
             AuthKey = authKey
         };
@@ -67,6 +66,7 @@ public class AuthService : IAuthService
         try
         {
             await _db.SystemUsers.AddAsync(systemUser);
+            await _db.SaveChangesAsync();
         }
         catch (Exception ex)
         {

@@ -21,6 +21,20 @@ namespace dig.API.Migrations
 
             SqlServerModelBuilderExtensions.UseIdentityColumns(modelBuilder, 1L, 1);
 
+            modelBuilder.Entity("dig.API.Feature.Auth.UserAuthKey", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("Password")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("UserAuthKeys");
+                });
+
             modelBuilder.Entity("Document", b =>
                 {
                     b.Property<Guid>("Id")
@@ -28,12 +42,15 @@ namespace dig.API.Migrations
                         .HasColumnType("uniqueidentifier");
 
                     b.Property<string>("Content")
+                        .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("Link")
+                        .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("Status")
+                        .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<Guid>("UserId")
@@ -50,15 +67,29 @@ namespace dig.API.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uniqueidentifier");
 
-                    b.Property<string>("Email")
-                        .HasColumnType("nvarchar(max)");
-
                     b.Property<string>("Username")
+                        .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
                     b.HasKey("Id");
 
                     b.ToTable("SystemUsers");
+                });
+
+            modelBuilder.Entity("dig.API.Feature.Auth.UserAuthKey", b =>
+                {
+                    b.HasOne("SystemUser", "User")
+                        .WithOne("AuthKey")
+                        .HasForeignKey("dig.API.Feature.Auth.UserAuthKey", "Id")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("User");
+                });
+
+            modelBuilder.Entity("SystemUser", b =>
+                {
+                    b.Navigation("AuthKey");
                 });
 #pragma warning restore 612, 618
         }
