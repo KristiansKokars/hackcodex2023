@@ -2,12 +2,7 @@
 	import { PUBLIC_BACKEND_URL } from '$env/static/public';
 	import { Label, Card, Dropzone, Button } from 'flowbite-svelte';
 
-	let value: string | undefined;
 	let files: FileList | undefined;
-
-	$: {
-		console.log(files);
-	}
 
 	function sendFiles() {
 		console.log('sending files');
@@ -35,7 +30,7 @@
 <div class="min-h-screen m-auto flex justify-center items-center max-w-screen-md">
 	<Card class="w-96">
 		<Label class="pb-2">Upload Document</Label>
-		<Dropzone id="dropzone" bind:value bind:files>
+		<Dropzone id="dropzone" bind:files>
 			<svg
 				aria-hidden="true"
 				class="mb-3 w-10 h-10 text-gray-400"
