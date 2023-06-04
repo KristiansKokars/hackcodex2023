@@ -13,3 +13,19 @@ export async function GET({ fetch, url }) {
 	const response = await fetch(`${PUBLIC_BACKEND_URL}/docs/${documentId}`);
 	return response;
 }
+
+export async function POST({ request, url, fetch }) {
+	if (dev) {
+		// To allow self-signed certs during development to pass
+		process.env.NODE_TLS_REJECT_UNAUTHORIZED = '0';
+	}
+
+	const documentId = url.searchParams.get('id');
+
+	// TODO: this is terrible but it is 1:31AM and I want this to just work, so JSON pain it is
+	const jsonContent = await request.json();
+	const response = await fetch(`${PUBLIC_BACKEND_URL}/resolve/${documentId}`, {
+		body: JSON.stringify(jsonContent)
+	});
+	return response;
+}

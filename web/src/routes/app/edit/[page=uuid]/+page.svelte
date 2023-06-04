@@ -1,15 +1,11 @@
 <script lang="ts">
 	import { page } from '$app/stores';
 	import type { DocumentRow } from '$lib/features/documents/DocumentRow.js';
+	import type { FormField } from '$lib/features/documents/FormField.js';
 	import { Label, Input, Button, Card, Progressbar } from 'flowbite-svelte';
+	import DynamicFormInput from './DynamicFormInput.svelte';
 
 	export let data;
-
-	interface FormField {
-		label: string;
-		value: string;
-		confidence: number;
-	}
 
 	// TODO: there was a better way to rename page data, but HACKATHON COUNTDOWN IS CALLING
 	const scannedDocument = data;
@@ -17,6 +13,7 @@
 
 	const isDocumentFaulty = data.status === 'Faulty';
 
+	let originalDocumentRows: Map<string, DocumentRow> = new Map();
 	let formFields: FormField[] = [];
 
 	for (const [key, value] of Object.entries(scannedDocument.content)) {
@@ -26,17 +23,42 @@
 			continue;
 		}
 
+		originalDocumentRows.set(key, documentValue);
+
+		console.log(`Min Percent: ${scannedDocument.minAllowedPercent}`);
+
 		formFields.push({
 			label: key,
 			value: documentValue.Value,
-			confidence: documentValue.Confidence * 100
+			confidence: documentValue.Confidence * 100,
+			isHigherThanMinimumConfidence: documentValue.Confidence > scannedDocument.minAllowedPercent
 		});
 	}
 
 	formFields = formFields;
 
-	async function editOnBackend() {
-		await fetch(`/edit?id=${documentId}`);
+	async function updateWithoutEdits() {
+		await fetch(`/edit/${documentId}`, {
+			body: JSON.stringify(Object.fromEntries(originalDocumentRows))
+		});
+	}
+
+	async function update() {
+		const newDocumentMap = new Map<string, DocumentRow>();
+
+		for (const formField of formFields) {
+			newDocumentMap.set(formField.label, {
+				Value: formField.value,
+				Confidence: formField.confidence,
+				MinAllowedPercent: formField.minAllowedPercent
+			});
+		}
+
+		const newDocumentRows = JSON.stringify(Object.fromEntries(newDocumentMap));
+		// TODO: someone do something with this response and show loading/success/error, I want to sleep
+		const response = await fetch(`/edit/${documentId}`, {
+			body: newDocumentRows
+		});
 	}
 </script>
 
@@ -50,24 +72,16 @@
 	</div>
 	<div class="flex flex-col items-center justify-center">
 		{#if isDocumentFaulty}
-			<Card color="red" class="mb-4"
-				>OMG YOUR DOCUMENT IS FUCKED, HELP THE AI FIX IT WITH YOUR HUMAN POWERS</Card
+			<Card color="red" class="mb-4 mt-4"
+				>Document has problems, see below fields for confidence ratings and edit if neccessary.</Card
 			>
+			<Button class="w-56 mb-3" color="green" on:click={updateWithoutEdits}
+				>Send Original AI Fields</Button
+			>
+			<Button class="w-56 mb-5" color="green" on:click={update}>Update with current values</Button>
 			{#each formFields as formField}
-				<div class="mb-6 w-96">
-					<Label for="large-input" class="block mb-2">{formField.label}</Label>
-					<Label>Confidence: {formField.confidence.toPrecision(2)}%</Label>
-					<Progressbar progress={`${formField.confidence}`} color="red" />
-					<Input
-						class="h-8 rounded-none"
-						id={formField.label}
-						size="lg"
-						placeholder={formField.value}
-						value={formField.value}
-					/>
-				</div>
+				<DynamicFormInput bind:formField />
 			{/each}
-			<Button class="w-56" color="green">Update</Button>
 		{:else}
 			<p>Your document is cool</p>
 		{/if}

@@ -4,6 +4,7 @@ export interface ScannedDocument {
 	content: object;
 	link: string;
 	status: 'Faulty' | 'Correct';
+	minAllowedPercent: number;
 	createdAt: number;
 }
 
