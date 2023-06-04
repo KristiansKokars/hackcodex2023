@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { goto } from '$app/navigation';
 	import { PUBLIC_BACKEND_URL } from '$env/static/public';
 	import Logo from '$lib/components/Logo.svelte';
 	import { Label, Card, Dropzone, Button } from 'flowbite-svelte';
@@ -25,6 +26,13 @@
 			console.error(error);
 		}
 	}
+
+	async function logOut() {
+		await fetch('/logout', {
+			method: 'POST'
+		});
+		goto('/login');
+	}
 </script>
 
 <nav class="bg-white shadow">
@@ -32,8 +40,7 @@
 		<div class="relative flex h-16 justify-between">
 			<div class="absolute inset-y-0 left-0 flex items-center sm:hidden">
 				<!-- Mobile menu button -->
-				<button
-					type="button"
+				<div
 					class="inline-flex items-center justify-center rounded-md p-2 text-gray-400 hover:bg-gray-100 hover:text-gray-500 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-indigo-500"
 					aria-controls="mobile-menu"
 					aria-expanded="false"
@@ -44,22 +51,22 @@
 
             Menu open: "hidden", Menu closed: "block"
           -->
-					<a
-						href="/maksims"
+					<Button
+						on:click={logOut}
 						class="inline-flex items-center border-b-2 border-transparent px-1 pt-1 text-sm font-medium text-gray-900"
-						>Log Out</a
+						>Log Out</Button
 					>
 					<!--
             Icon when menu is open.
 
             Menu open: "block", Menu closed: "hidden"
           -->
-					<a
-						href="/maksims"
+					<Button
+						on:click={logOut}
 						class="inline-flex items-center border-b-2 border-transparent px-1 pt-1 text-sm font-medium text-gray-900"
-						>Log Out</a
+						>Log Out</Button
 					>
-				</button>
+				</div>
 			</div>
 			<div class="flex flex-1 items-center justify-center sm:items-stretch sm:justify-start">
 				<Logo />
@@ -88,17 +95,7 @@
 						Upload File
 					</button></a
 				>
-				<button
-					type="button"
-					class="rounded-full bg-white p-1 text-gray-400 hover:text-gray-500 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2"
-				>
-					<span class="sr-only">View notifications</span>
-					<a
-						href="/register"
-						class="inline-flex items-center border-b-2 border-transparent px-1 pt-1 text-sm font-medium text-gray-900"
-						>Log Out</a
-					>
-				</button>
+				<Button color="alternative" on:click={logOut}>Log Out</Button>
 
 				<!-- Profile dropdown -->
 				<div class="relative ml-3" />

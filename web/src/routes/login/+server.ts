@@ -30,7 +30,11 @@ export async function POST({ fetch, request, locals, cookies }) {
 		const user = (await response.json()) as User;
 		locals.user = user;
 
-		cookies.set("sessionUser", JSON.stringify(user));
+		cookies.set('sessionUser', JSON.stringify(user), {
+			path: '/',
+			httpOnly: true,
+			secure: true
+		});
 
 		throw redirect(302, '/');
 	}
