@@ -1,4 +1,5 @@
 using System.Text.Json;
+using System.Linq;
 
 namespace dig.API.Feature.Documents;
 
@@ -14,9 +15,9 @@ public static class DocumentRoutes
     {
         webApp.MapPost("/upload", Upload);
         webApp.MapPost("/resolve/{id}", Resolve);
-        webApp.MapGet("/docs", GetDocuments);
-        webApp.MapGet("/docs/faulty", GetFaultyDocuments);
-        webApp.MapGet("/docs/{id}", GetDocumentById);
+        webApp.MapGet("/docs", GetDocuments).Produces<IEnumerable<DocumentDto>>();
+        webApp.MapGet("/docs/faulty", GetFaultyDocuments).Produces<IEnumerable<DocumentDto>>();
+        webApp.MapGet("/docs/{id}", GetDocumentById).Produces<DocumentDto>();
     }
 
     // piem, jāposto uz localhost:7050/resolve/f5156900-0253-11ee-be56-0242ac120002
@@ -78,26 +79,89 @@ public static class DocumentRoutes
         return Results.Ok(documentDtos);
     }
 
-    private static async Task<IResult> GetDocumentById(HttpContext context, string id)
+    // TODO: include also link to .labels.json doc
+    private static async Task<IResult> GetDocumentById(
+        HttpContext context, 
+        string id, 
+        DocumentService documentService)
     {
         Console.WriteLine($"Document id: {id}");
         var documentId = Guid.Parse(id);
-        var docService = context.RequestServices.GetRequiredService<DocumentService>();
+
+        // TODO: receive from request (or store in config?)
+        double minRequiredPrecison = 0.85;
+        Guid userId = Guid.NewGuid();
 
         // TODO: include user ID
-        var document = docService.GetDocumentById(documentId);
-        var documentDto = new DocumentDto
+        var document = documentService.GetDocumentById(documentId);
+        if (document.Status == "Correct")
         {
-            Id = document.Id,
-            Content = JsonSerializer.Deserialize<DocContentDto>(document.Content),
-            Link = document.Link,
-            Status = document.Status
-        };
+            var documentDto = new DocumentDto
+            {
+                Id = document.Id,
+                Content = JsonSerializer.Deserialize<DocContentDto>(document.Content),
+                Link = document.Link,
+                Status = document.Status
+            };
 
-        return Results.Ok(documentDto);
+            return Results.Ok(documentDto);
+        }
+        else
+        {
+            var labelsLink = document.Link + ".labels.json";
+
+            // TODO: error handling here
+            var labelsJSON = await AzureFileService.RetrieveJSONFromStorage(labelsLink);
+            var labelDocument = JsonSerializer.Deserialize<DocLabelsDto>(labelsJSON);
+            var documentContent = JsonSerializer.Deserialize<Dictionary<string, Dictionary<string, object>>>(document.Content);
+
+            var documentContentMarked = new Dictionary<string, Dictionary<string, object>>();
+            foreach (var documentRow in documentContent)
+            {
+                var name = documentRow.Key;
+                var rowContent = documentRow.Value;
+
+                var fieldValue = rowContent["Value"];
+                var fieldConfidence = (double)rowContent["Confidence"];
+
+                if (fieldConfidence < minRequiredPrecison)
+                {
+                    var documentFieldValue = new Dictionary<string, object>();
+                    documentFieldValue.Add("Value", fieldValue);
+                    documentFieldValue.Add("Confidence", fieldConfidence);
+                    
+                    var fieldLabels = labelDocument.Labels
+                        .SelectMany(label => label.Value)
+                        .SelectMany(labelList => labelList.BoundingBoxes)
+                        .Select(box => box)
+                        .ToList();
+                    
+                    documentFieldValue.Add("Labels", fieldLabels);
+
+                    documentContentMarked.Add(name, documentFieldValue);
+                }
+                else
+                {
+                    documentContentMarked.Add(documentRow.Key, documentRow.Value);
+                }
+                Console.WriteLine($"Row: {name}, Value: {fieldValue}, %: {fieldConfidence}");
+            }
+
+            var contentMarkedJSON = JsonSerializer.Serialize(documentContentMarked);
+
+            var documentDtoMarked = new DocumentDto
+            {
+                Id = document.Id,
+                Content = JsonSerializer.Deserialize<DocContentDto>(contentMarkedJSON),
+                Link = document.Link,
+                Status = document.Status
+            };
+
+            return Results.Ok(documentDtoMarked);
+        }
     }
 
-    private static async Task<IResult> Upload(HttpContext context)
+    private static async Task<IResult> Upload(HttpContext context, DocumentService documentService)
     {
         Console.WriteLine(context.Request.Form.Files);
 
@@ -108,7 +172,6 @@ public static class DocumentRoutes
         double minRequiredPrecison = 0.85;
         Guid userId = Guid.NewGuid();
 
-        var docService = context.RequestServices.GetRequiredService<DocumentService>();
         var filesToInsert = new List<Document>();
 
         foreach (var file in files)
@@ -138,14 +201,14 @@ public static class DocumentRoutes
             }
 
             var content = JsonSerializer.Serialize(req);
-            var doc = docService.DocumentHelper(content, userId, fileName, docStatus);
+            var doc = documentService.DocumentHelper(content, userId, fileName, docStatus);
 
             filesToInsert.Add(doc);
             fileNames.Add(fileName);
         }
 
         // TODO: error handling here
-        var ids = docService.SaveDocumentBatch(filesToInsert);
+        var ids = documentService.SaveDocumentBatch(filesToInsert);
         // TODO: determine response content
         return Results.Ok(fileNames);
     }
