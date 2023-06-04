@@ -7,19 +7,19 @@ public class AzureAIService
 {
     // sample url: "https://github.com/Azure-Samples/cognitive-services-REST-api-samples/raw/master/curl/form-recognizer/rest-api/invoice.pdf"
 
-    public static async Task<Either<SimpleMessageError, Dictionary<string, Dictionary<string, object>>>> RecognizeInvoiceModel(string invoiceLink)
+    public static async Task<Dictionary<string, Dictionary<string, object>>> RecognizeInvoiceModel(string invoiceLink)
     {
         Console.WriteLine($"Azure AI Service Invoice Link: ${invoiceLink}");
         var key = Environment.GetEnvironmentVariable("FR_KEY");
         if (key is null)
         {
-            return new Either<SimpleMessageError, Dictionary<string, Dictionary<string, object>>>(new SimpleMessageError("Failed to retrieve Azure AI key from ENV!"));
+            throw new Exception("Failed to retrieve Azure AI key from ENV!");
         }
 
         var endpoint = Environment.GetEnvironmentVariable("FR_ENDPOINT");
         if (endpoint is null)
         {
-            return new Either<SimpleMessageError, Dictionary<string, Dictionary<string, object>>>(new SimpleMessageError("Failed to retrieve Azure AI endpoint from ENV!"));
+            throw new Exception("Failed to retrieve Azure AI endpoint from ENV!");
         }
 
         AzureKeyCredential credential = new AzureKeyCredential(key);
@@ -32,17 +32,21 @@ public class AzureAIService
         var modelName = Environment.GetEnvironmentVariable("FR_MODEL");
         if (modelName is null)
         {
-            return new Either<SimpleMessageError, Dictionary<string, Dictionary<string, object>>>(new SimpleMessageError("Failed to retrieve Azure AI model name from ENV!"));
+            throw new Exception("Failed to retrieve Azure AI model name from ENV!");
         }
 
         // TODO: check if replaced with correct form recognition model
         AnalyzeDocumentOperation operation = await client.AnalyzeDocumentFromUriAsync(WaitUntil.Completed, modelName, invoiceUri); //prebuilt-invoice
         if (!operation.HasValue)
         {
-            return new Either<SimpleMessageError, Dictionary<string, Dictionary<string, object>>>(new SimpleMessageError("Document analysis with Azure AI failed!"));
+            throw new Exception("Document analysis with Azure AI failed!");
         }
 
         AnalyzeResult result = operation.Value;
+
+        Console.WriteLine("\n Document analysis result: \n");
+        Console.WriteLine(result.KeyValuePairs);
+        Console.WriteLine();
 
         for (int i = 0; i < result.Documents.Count; i++)
         {
@@ -53,9 +57,12 @@ public class AzureAIService
             // retrieving Invoice Date
             if (document.Fields.TryGetValue("InvoiceDate", out DocumentField invoiceDateField))
             {
-                if (invoiceDateField.FieldType == DocumentFieldType.Date)
+                // TODO: remove in prod
+                Console.WriteLine(invoiceDateField.FieldType.ToString());
+
+                if (invoiceDateField.FieldType != DocumentFieldType.Unknown)
                 {
-                    string invoiceDate = invoiceDateField.Value.AsString();
+                    var invoiceDate = invoiceDateField.Content; // Value.AsString()
                     Console.WriteLine($"Invoice date: '{invoiceDate}', with confidence {invoiceDateField.Confidence}");
                     
                     invoiceFields.Add("InvoiceDate", new Dictionary<string, object> {
@@ -68,9 +75,12 @@ public class AzureAIService
             // retrieving Invoice Id
             if (document.Fields.TryGetValue("InvoiceId", out DocumentField invoiceIdField))
             {
-                if (invoiceIdField.FieldType == DocumentFieldType.String)
+                // TODO: remove in prod
+                Console.WriteLine(invoiceIdField.FieldType.ToString());
+
+                if (invoiceIdField.FieldType != DocumentFieldType.Unknown)
                 {
-                    string invoiceId = invoiceIdField.Value.AsString();
+                    string invoiceId = invoiceIdField.Content;
                     Console.WriteLine($"Invoice id: '{invoiceId}', with confidence {invoiceIdField.Confidence}");
                     
                     invoiceFields.Add("InvoiceId", new Dictionary<string, object> {
@@ -83,9 +93,12 @@ public class AzureAIService
             // retrieving Total With No Tax
             if (document.Fields.TryGetValue("TotalWithNoTax", out DocumentField totalWithNoTaxField))
             {
-                if (totalWithNoTaxField.FieldType == DocumentFieldType.Currency)
+                // TODO: remove in prod
+                Console.WriteLine(totalWithNoTaxField.FieldType.ToString());
+
+                if (totalWithNoTaxField.FieldType != DocumentFieldType.Unknown)
                 {
-                    string totalWithNoTax = totalWithNoTaxField.Value.AsString();
+                    string totalWithNoTax = totalWithNoTaxField.Content;
                     Console.WriteLine($"Total With No Tax: '{totalWithNoTax}', with confidence {totalWithNoTaxField.Confidence}");
                     
                     invoiceFields.Add("TotalWithNoTax", new Dictionary<string, object> {
@@ -98,10 +111,13 @@ public class AzureAIService
             // retrieving Total Tax
             if (document.Fields.TryGetValue("TotalTax", out DocumentField totalTaxField))
             {
-                if (totalTaxField.FieldType == DocumentFieldType.Currency)
+                // TODO: remove in prod
+                Console.WriteLine(totalTaxField.FieldType.ToString());
+
+                if (totalTaxField.FieldType != DocumentFieldType.Unknown)
                 {
-                    string totalTax = totalTaxField.Value.AsString();
-                    Console.WriteLine($"Total Tax: '{totalTax}', with confidence {totalTaxField.Confidence}");
+                    string totalTax = totalTaxField.Content;
+                    Console.WriteLine($"Total Tax: '{totalTax}', with confid+ence {totalTaxField.Confidence}");
                     
                     invoiceFields.Add("TotalTax", new Dictionary<string, object> {
                         { "Value", totalTax },
@@ -113,9 +129,12 @@ public class AzureAIService
             // retrieving Total
             if (document.Fields.TryGetValue("Total", out DocumentField totalField))
             {
-                if (totalField.FieldType == DocumentFieldType.Currency)
+                // TODO: remove in prod
+                Console.WriteLine(totalField.FieldType.ToString());
+
+                if (totalField.FieldType != DocumentFieldType.Unknown)
                 {
-                    string total = totalField.Value.AsString();
+                    string total = totalField.Content;
                     Console.WriteLine($"Total: '{total}', with confidence {totalField.Confidence}");
                     
                     invoiceFields.Add("Total", new Dictionary<string, object> {
@@ -128,9 +147,12 @@ public class AzureAIService
             // retrieving Vendor Address
             if (document.Fields.TryGetValue("VendorAddress", out DocumentField vendorAddressField))
             {
-                if (vendorAddressField.FieldType == DocumentFieldType.String)
+                // TODO: remove in prod
+                Console.WriteLine(vendorAddressField.FieldType.ToString());
+
+                if (vendorAddressField.FieldType != DocumentFieldType.Unknown)
                 {
-                    string vendorAddress = vendorAddressField.Value.AsString();
+                    string vendorAddress = vendorAddressField.Content;
                     Console.WriteLine($"Vendor Address: '{vendorAddress}', with confidence {vendorAddressField.Confidence}");
                     
                     invoiceFields.Add("VendorAddress", new Dictionary<string, object> {
@@ -143,9 +165,12 @@ public class AzureAIService
             // retrieving Buyer Address
             if (document.Fields.TryGetValue("BuyerAddress", out DocumentField buyerAddressField))
             {
-                if (buyerAddressField.FieldType == DocumentFieldType.String)
+                // TODO: remove in prod
+                Console.WriteLine(buyerAddressField.FieldType.ToString());
+
+                if (buyerAddressField.FieldType != DocumentFieldType.Unknown)
                 {
-                    string buyerAddress = buyerAddressField.Value.AsString();
+                    string buyerAddress = buyerAddressField.Content;
                     Console.WriteLine($"Buyer Address: '{buyerAddress}', with confidence {buyerAddressField.Confidence}");
                     
                     invoiceFields.Add("BuyerAddress", new Dictionary<string, object> {
@@ -158,9 +183,12 @@ public class AzureAIService
             // retrieving Date To Pay
             if (document.Fields.TryGetValue("DateToPay", out DocumentField dateToPayField))
             {
-                if (dateToPayField.FieldType == DocumentFieldType.Date)
+                // TODO: remove in prod
+                Console.WriteLine(dateToPayField.FieldType.ToString());
+
+                if (dateToPayField.FieldType != DocumentFieldType.Unknown)
                 {
-                    string dateToPay = dateToPayField.Value.AsString();
+                    var dateToPay = dateToPayField.Content;
                     Console.WriteLine($"Date To Pay: '{dateToPay}', with confidence {dateToPayField.Confidence}");
                     
                     invoiceFields.Add("DateToPay", new Dictionary<string, object> {
@@ -173,9 +201,12 @@ public class AzureAIService
             // retrieving Vendor Reg Num
             if (document.Fields.TryGetValue("VendorRegNum", out DocumentField vendorRegNumField))
             {
-                if (vendorRegNumField.FieldType == DocumentFieldType.String)
+                // TODO: remove in prod
+                Console.WriteLine(vendorRegNumField.FieldType.ToString());
+
+                if (vendorRegNumField.FieldType != DocumentFieldType.Unknown)
                 {
-                    string vendorRegNum = vendorRegNumField.Value.AsString();
+                    string vendorRegNum = vendorRegNumField.Content;
                     Console.WriteLine($"Vendor Reg Num: '{vendorRegNum}', with confidence {vendorRegNumField.Confidence}");
                     
                     invoiceFields.Add("VendorRegNum", new Dictionary<string, object> {
@@ -188,9 +219,12 @@ public class AzureAIService
             // retrieving Buyer Reg Num
             if (document.Fields.TryGetValue("BuyerRegNum", out DocumentField buyerRegNumField))
             {
-                if (buyerRegNumField.FieldType == DocumentFieldType.String)
+                // TODO: remove in prod
+                Console.WriteLine(buyerRegNumField.FieldType.ToString());
+
+                if (buyerRegNumField.FieldType != DocumentFieldType.Unknown)
                 {
-                    string buyerRegNum = buyerRegNumField.Value.AsString();
+                    string buyerRegNum = buyerRegNumField.Content;
                     Console.WriteLine($"Buyer Reg Num: '{buyerRegNum}', with confidence {buyerRegNumField.Confidence}");
                     
                     invoiceFields.Add("BuyerRegNum", new Dictionary<string, object> {
@@ -203,9 +237,12 @@ public class AzureAIService
             // retrieving Vendor Company Name
             if (document.Fields.TryGetValue("VendorCompanyName", out DocumentField vendorCompanyNameField))
             {
-                if (vendorCompanyNameField.FieldType == DocumentFieldType.String)
+                // TODO: remove in prod
+                Console.WriteLine(vendorCompanyNameField.FieldType.ToString());
+
+                if (vendorCompanyNameField.FieldType != DocumentFieldType.Unknown)
                 {
-                    string vendorCompanyName = vendorCompanyNameField.Value.AsString();
+                    string vendorCompanyName = vendorCompanyNameField.Content;
                     Console.WriteLine($"Vendor Company Name: '{vendorCompanyName}', with confidence {vendorCompanyNameField.Confidence}");
                     
                     invoiceFields.Add("VendorCompanyName", new Dictionary<string, object> {
@@ -218,9 +255,12 @@ public class AzureAIService
             // retrieving Buyer Company Name
             if (document.Fields.TryGetValue("BuyerCompanyName", out DocumentField buyerCompanyNameField))
             {
-                if (buyerCompanyNameField.FieldType == DocumentFieldType.String)
+                // TODO: remove in prod
+                Console.WriteLine(buyerCompanyNameField.FieldType.ToString());
+
+                if (buyerCompanyNameField.FieldType != DocumentFieldType.Unknown)
                 {
-                    string buyerCompanyName = buyerCompanyNameField.Value.AsString();
+                    string buyerCompanyName = buyerCompanyNameField.Content;
                     Console.WriteLine($"Buyer Company Name: '{buyerCompanyName}', with confidence {buyerCompanyNameField.Confidence}");
                     
                     invoiceFields.Add("BuyerCompanyName", new Dictionary<string, object> {
@@ -233,9 +273,12 @@ public class AzureAIService
             // retrieving Vendor Bank Account
             if (document.Fields.TryGetValue("VendorBankAccount", out DocumentField vendorBankAccountField))
             {
-                if (vendorBankAccountField.FieldType == DocumentFieldType.String)
+                // TODO: remove in prod
+                Console.WriteLine(vendorBankAccountField.FieldType.ToString());
+
+                if (vendorBankAccountField.FieldType != DocumentFieldType.Unknown)
                 {
-                    string vendorBankAccount = vendorBankAccountField.Value.AsString();
+                    string vendorBankAccount = vendorBankAccountField.Content;
                     Console.WriteLine($"Vendor Bank Account: '{vendorBankAccount}', with confidence {vendorBankAccountField.Confidence}");
                     
                     invoiceFields.Add("VendorBankAccount", new Dictionary<string, object> {
@@ -248,9 +291,12 @@ public class AzureAIService
             // retrieving Buyer Bank Account
             if (document.Fields.TryGetValue("BuyerBankAccount", out DocumentField buyerBankAccountField))
             {
-                if (buyerBankAccountField.FieldType == DocumentFieldType.String)
+                // TODO: remove in prod
+                Console.WriteLine(buyerBankAccountField.FieldType.ToString());
+
+                if (buyerBankAccountField.FieldType != DocumentFieldType.Unknown)
                 {
-                    string buyerBankAccount = buyerBankAccountField.Value.AsString();
+                    string buyerBankAccount = buyerBankAccountField.Content;
                     Console.WriteLine($"Buyer Bank Account: '{buyerBankAccount}', with confidence {buyerBankAccountField.Confidence}");
                     
                     invoiceFields.Add("BuyerBankAccount", new Dictionary<string, object> {
@@ -263,9 +309,12 @@ public class AzureAIService
             // retrieving Vendor PVN num
             if (document.Fields.TryGetValue("VendorPVNnum", out DocumentField vendorPVNnumField))
             {
-                if (vendorPVNnumField.FieldType == DocumentFieldType.String)
+                // TODO: remove in prod
+                Console.WriteLine(vendorPVNnumField.FieldType.ToString());
+                
+                if (vendorPVNnumField.FieldType != DocumentFieldType.Unknown)
                 {
-                    string vendorPVNnum = vendorPVNnumField.Value.AsString();
+                    string vendorPVNnum = vendorPVNnumField.Content;
                     Console.WriteLine($"Vendor PVN num: '{vendorPVNnum}', with confidence {vendorPVNnumField.Confidence}");
                     
                     invoiceFields.Add("VendorPVNnum", new Dictionary<string, object> {
@@ -278,9 +327,12 @@ public class AzureAIService
             // retrieving Buyer PVN num
             if (document.Fields.TryGetValue("BuyerPVNnum", out DocumentField buyerPVNnumField))
             {
-                if (buyerPVNnumField.FieldType == DocumentFieldType.String)
+                // TODO: remove in prod
+                Console.WriteLine(buyerPVNnumField.FieldType.ToString());
+
+                if (buyerPVNnumField.FieldType != DocumentFieldType.Unknown)
                 {
-                    string buyerPVNnum = buyerPVNnumField.Value.AsString();
+                    string buyerPVNnum = buyerPVNnumField.Content;
                     Console.WriteLine($"Buyer PVN num: '{buyerPVNnum}', with confidence {buyerPVNnumField.Confidence}");
                     
                     invoiceFields.Add("BuyerPVNnum", new Dictionary<string, object> {
@@ -293,9 +345,12 @@ public class AzureAIService
             // retrieving Physical Buyer Name
             if (document.Fields.TryGetValue("PhysicalBuyerName", out DocumentField physicalBuyerNameField))
             {
-                if (physicalBuyerNameField.FieldType == DocumentFieldType.String)
+                // TODO: remove in prod
+                Console.WriteLine(physicalBuyerNameField.FieldType.ToString());
+
+                if (physicalBuyerNameField.FieldType != DocumentFieldType.Unknown)
                 {
-                    string physicalBuyerName = physicalBuyerNameField.Value.AsString();
+                    string physicalBuyerName = physicalBuyerNameField.Content;
                     Console.WriteLine($"Physical Buyer Name: '{physicalBuyerName}', with confidence {physicalBuyerNameField.Confidence}");
                     
                     invoiceFields.Add("PhysicalBuyerName", new Dictionary<string, object> {
@@ -306,6 +361,6 @@ public class AzureAIService
             }
         }
 
-        return new Either<SimpleMessageError, Dictionary<string, Dictionary<string, object>>>(invoiceFields);
+        return invoiceFields;
     }
 }

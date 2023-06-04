@@ -249,27 +249,20 @@ public static class DocumentRoutes
             Console.WriteLine("File name: " + fileName);
 
             // TODO: refactoring
-            var recognitionResult = await AzureAIService.RecognizeInvoiceModel(fileName);
-
-            var recognitionError = false;
-            var reqMaybe = fileNameResult.Map<object>(
-                error: error => 
-                {
-                    recognitionError = true;
-                    return error;
-                },
-                success: value => {
-                    return value;
-                }
-            );
-
-            if (recognitionError)
+            Dictionary<string, Dictionary<string, object>> req = new Dictionary<string, Dictionary<string, object>>();
+            try
+            {
+                req = await AzureAIService.RecognizeInvoiceModel(fileName);
+            }
+            catch (Exception e)
             {
                 // TODO: in production, find way to return 500 Internal server error
-                return Results.BadRequest((Common.SimpleMessageError) reqMaybe);
+                return Results.BadRequest(e.Message);
             }
 
-            var req = (Dictionary<string, Dictionary<string, object>>) reqMaybe;
+            Console.WriteLine("OUTPUT FROM RECOGNITION: \n");
+            Console.WriteLine(req);
+
             var docStatus = "Correct";
 
             foreach (var documentRow in req)
@@ -278,11 +271,12 @@ public static class DocumentRoutes
                 var rowContent = documentRow.Value;
 
                 var fieldValue = rowContent["Value"];
-                var fieldConfidence = (double)rowContent["Confidence"];
+                var fieldConfidence = Convert.ToDouble((float)rowContent["Confidence"]);
 
                 if (fieldConfidence < minRequiredPrecison)
                 {
                     docStatus = "Faulty";
+                    Console.WriteLine("Saving a faulty document");
                 }
 
                 Console.WriteLine($"Row: {name}, Value: {fieldValue}, %: {fieldConfidence}");
