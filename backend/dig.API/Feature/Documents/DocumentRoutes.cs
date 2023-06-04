@@ -292,6 +292,7 @@ public static class DocumentRoutes
             catch (Exception e)
             {
                 // TODO: in production, find way to return 500 Internal server error
+                Console.WriteLine(e);
                 return Results.BadRequest(e.Message);
             }
 
