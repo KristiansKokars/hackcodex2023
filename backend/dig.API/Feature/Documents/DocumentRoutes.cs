@@ -231,7 +231,7 @@ public static class DocumentRoutes
 
     private static async Task<IResult> Upload(HttpContext context, DocumentService documentService)
     {
-        Console.WriteLine(context.Request.Form.Files);
+        Console.WriteLine(context.User);
 
         var files = context.Request.Form.Files;
         var fileNames = new List<string>();

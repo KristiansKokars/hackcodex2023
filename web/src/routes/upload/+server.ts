@@ -3,7 +3,7 @@ import { PUBLIC_BACKEND_URL } from '$env/static/public';
 
 export async function POST(event) {
 	if (dev) {
-        // To allow self-signed certs during development to pass
+		// To allow self-signed certs during development to pass
 		process.env.NODE_TLS_REJECT_UNAUTHORIZED = '0';
 	}
 
