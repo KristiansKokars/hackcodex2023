@@ -158,7 +158,8 @@ public static class DocumentRoutes
             var documentDto = new DocumentDto
             {
                 Id = document.Id,
-                InvoiceId = JsonSerializer.Deserialize<DocIdDto>(document.Content)!.InvoiceId["Value"].ToString()!,
+                // InvoiceId = JsonSerializer.Deserialize<DocIdDto>(document.Content)!.InvoiceId["Value"].ToString()!,
+                InvoiceId = document.InvoiceId,
                 Content = JsonSerializer.Deserialize<ResponseDocContentDto>(document.Content)!,
                 Link = document.Link,
                 Status = document.Status,
@@ -180,6 +181,7 @@ public static class DocumentRoutes
             return labelsJSONResult.Map<IResult>(
                 error: error => 
                 {
+                    Console.WriteLine(error);
                     // TODO: in production, find way to return 500 Internal server error
                     return Results.BadRequest(error);
                 },
