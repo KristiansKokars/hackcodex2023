@@ -3,7 +3,7 @@ import type { User } from '$lib/features/auth/User';
 import { redirect, type Handle } from '@sveltejs/kit';
 import { sequence } from '@sveltejs/kit/hooks';
 
-const unauthorizedRoutes = ['/login', 'register'];
+const unauthorizedRoutes = ['/login', '/register'];
 
 export async function handleFetch({ event, request, fetch }) {
 	const sessionUserToken = event.cookies.get('sessionUser');

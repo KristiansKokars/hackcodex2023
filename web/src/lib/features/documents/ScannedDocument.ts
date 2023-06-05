@@ -7,23 +7,3 @@ export interface ScannedDocument {
 	minAllowedPercent: number;
 	createdAt: number;
 }
-
-// interface ScanDocumentContent {
-// 	invoiceDate: DocumentRow;
-// 	invoiceId: DocumentRow;
-// 	totalWithNoTax: DocumentRow;
-// 	totalTax: DocumentRow;
-// 	total: DocumentRow;
-// 	vendorAddress: DocumentRow;
-// 	buyerAddress: DocumentRow;
-// 	dateToPay: DocumentRow;
-// 	vendorRegNum: DocumentRow;
-// 	buyerRegNum: DocumentRow;
-// 	vendorCompanyName: DocumentRow;
-// 	buyerCompanyName: DocumentRow;
-// 	vendorBankAccount: DocumentRow;
-// 	buyerBankAccount: DocumentRow;
-// 	vendorPVNnum: DocumentRow;
-// 	buyerPVNnum: DocumentRow;
-// 	physicalBuyerName: DocumentRow;
-// }
