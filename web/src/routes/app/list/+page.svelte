@@ -93,7 +93,7 @@
 				<TableBodyCell>{document.mark}</TableBodyCell>
 				<TableBodyCell>{document.statuss}</TableBodyCell>
 				<TableBodyCell>{document.doc_num}</TableBodyCell>
-				<TableBodyCell>{document.date}</TableBodyCell>
+				<TableBodyCell>{new Date(document.date)}</TableBodyCell>
 				<TableBodyCell
 					><a href={document.link} class="text-purple-400 hover:text-purple-600" target="_blank"
 						>Download</a

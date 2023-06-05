@@ -93,7 +93,7 @@
 				<TableBodyCell>{document.mark}</TableBodyCell>
 				<TableBodyCell>{document.statuss}</TableBodyCell>
 				<TableBodyCell>{document.doc_num}</TableBodyCell>
-				<TableBodyCell>{document.date}</TableBodyCell>
+				<TableBodyCell>{new Date(document.date)}</TableBodyCell>
 				<TableBodyCell
 					><a href={document.link} class="text-purple-400 hover:text-purple-600" target="_blank"
 						>Download</a
@@ -109,9 +109,9 @@
 	</TableBody>
 </Table>
 {#if items.length == 0}
-<div class="grid divide-x grow">
-	<div class="flex flex-col items-center justify-center">
-		<p>There are no faulty documents!</p>
+	<div class="grid divide-x grow">
+		<div class="flex flex-col items-center justify-center">
+			<p>There are no faulty documents!</p>
+		</div>
 	</div>
-</div>
-{/if }
+{/if}
