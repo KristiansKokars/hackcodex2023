@@ -10,12 +10,6 @@
 	</p>
 	<br />
 	<p>
-		NOTE: It is recommended to use this app in Firefox, since Chrome does not want to play ball with
-		embed tags and downloads PDFs instead of showing them. Solving this issue in time seems
-		impossible.
-	</p>
-	<br />
-	<p>
 		Authentication is very lax - it is done by simple username and there are no requirements for a
 		password.
 	</p>

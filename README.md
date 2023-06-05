@@ -1,6 +1,6 @@
 # HackCodeX 2023 ATEA Challenge
 
-All code is hacky, this will not be production-grade outside of the, hopefully, solid architecture :D
+All code is very hacky as it was assembled in 2 days and does not represent what we would do in an actual production app (where there would be time to ensure quality instead of "just get it working ASAP")
 
 ## Setup
 
