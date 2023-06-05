@@ -96,7 +96,7 @@
 				<TableBodyCell>{document.date}</TableBodyCell>
 				<TableBodyCell
 					><a href={document.link} class="text-purple-400 hover:text-purple-600" target="_blank"
-						>Link</a
+						>Download</a
 					></TableBodyCell
 				>
 				<TableBodyCell

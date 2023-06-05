@@ -5,6 +5,7 @@
 	import { Label, Input, Button, Card, Progressbar } from 'flowbite-svelte';
 	import DynamicFormInput from './DynamicFormInput.svelte';
 	import ScannedDocumentView from '$lib/components/ScannedDocumentView.svelte';
+	import { goto } from '$app/navigation';
 
 	export let data;
 
@@ -39,10 +40,14 @@
 	formFields = formFields;
 
 	async function updateWithoutEdits() {
-		await fetch(`/app/edit?id=${documentId}`, {
+		const response = await fetch(`/app/edit?id=${documentId}`, {
 			method: 'POST',
 			body: JSON.stringify(Object.fromEntries(originalDocumentRows))
 		});
+
+		if (response.ok) {
+			goto('/app/list');
+		}
 	}
 
 	async function update() {
@@ -61,6 +66,10 @@
 			method: 'POST',
 			body: newDocumentRows
 		});
+
+		if (response.ok) {
+			goto('/app/list');
+		}
 	}
 </script>
 
