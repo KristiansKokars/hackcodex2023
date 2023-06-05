@@ -21,8 +21,8 @@
 		link: string;
 	}[] = [];
 
-	async function getDocuments() {
-		const response = await fetch('/app/list');
+	async function getFaultyDocuments() {
+		const response = await fetch('/app/pending');
 		const jsonData = await response.json();
 		const scannedDocuments = jsonData as ScannedDocument[];
 
@@ -43,7 +43,7 @@
 	}
 
 	onMount(() => {
-		getDocuments();
+		getFaultyDocuments();
 	});
 
 	const sortKey = writable('id'); // default sort key
@@ -111,7 +111,7 @@
 {#if items.length == 0}
 <div class="grid divide-x grow">
 	<div class="flex flex-col items-center justify-center">
-		<p>There are no documents yet!</p>
+		<p>There are no faulty documents!</p>
 	</div>
 </div>
 {/if }

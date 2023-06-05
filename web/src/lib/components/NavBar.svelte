@@ -49,6 +49,14 @@
 						>All Documents</a
 					>
 				</div>
+				<div class="hidden sm:ml-6 sm:flex sm:space-x-8">
+					<!-- Current: "border-indigo-500 text-gray-900", Default: "border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700" -->
+					<a
+						href="/app/pending"
+						class="inline-flex items-center border-b-2 border-transparent px-1 pt-1 text-sm font-medium text-gray-500 hover:border-gray-300 hover:text-gray-700"
+						>Pending Documents</a
+					>
+				</div>
 			</div>
 			<div
 				class="absolute inset-y-0 right-0 flex items-center pr-2 sm:static sm:inset-auto sm:ml-6 sm:pr-0 space-x-4"
