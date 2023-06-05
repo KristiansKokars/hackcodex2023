@@ -1,7 +1,8 @@
 using System.Text.Json;
-using System.Linq;
 using System.Security.Claims;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.OpenApi.Any;
+using Microsoft.OpenApi.Models;
 
 namespace dig.API.Feature.Documents;
 
@@ -15,11 +16,110 @@ public static class DocumentRoutes
     
     public static void AddDocuments(this WebApplication webApp)
     {
-        webApp.MapPost("/upload", Upload);
-        webApp.MapPost("/resolve/{id}", Resolve);
-        webApp.MapGet("/docs", GetDocuments).Produces<IEnumerable<DocumentDto>>();
-        webApp.MapGet("/docs/faulty", GetFaultyDocuments).Produces<IEnumerable<DocumentDto>>();
-        webApp.MapGet("/docs/{id}", GetDocumentById).Produces<DocumentDto>();
+        webApp.MapPost("/upload", Upload)
+            .WithName("Upload a document")
+            .WithTags("Docs")
+            .WithMetadata(new OpenApiSecurityRequirement
+            {
+                {
+                    new OpenApiSecurityScheme
+                    {
+                        Reference = new OpenApiReference
+                        {
+                            Type = ReferenceType.SecurityScheme,
+                            Id = "Bearer"
+                        }
+                    },
+                    new string[] { }
+                }
+            })
+            .WithMetadata(new OpenApiString("This endpint expects a FILE in pdf/image format, processes it using Azure Form Recognizer and saves it."))
+            .Produces<List<string>>(StatusCodes.Status200OK)
+            .Produces(StatusCodes.Status400BadRequest);
+
+        webApp.MapPost("/resolve/{id}", Resolve)
+            .WithName("Resolve document issuess")
+            .WithTags("Docs")
+            .WithMetadata(new OpenApiSecurityRequirement
+            {
+                {
+                    new OpenApiSecurityScheme
+                    {
+                        Reference = new OpenApiReference
+                        {
+                            Type = ReferenceType.SecurityScheme,
+                            Id = "Bearer"
+                        }
+                    },
+                    new string[] { }
+                }
+            })
+            .WithMetadata(new OpenApiString("This endpint expects CONTENT of file in JSON format and the ID of the file, updates with new content and marks FILE resolved."))
+            .Produces<Guid>(StatusCodes.Status200OK)
+            // .Produces(StatusCodes.Status404NotFound)
+            .Produces(StatusCodes.Status400BadRequest);
+
+        webApp.MapGet("/docs", GetDocuments)
+            .WithName("Retrieve all documents")
+            .WithTags("Docs")
+            .WithMetadata(new OpenApiSecurityRequirement
+            {
+                {
+                    new OpenApiSecurityScheme
+                    {
+                        Reference = new OpenApiReference
+                        {
+                            Type = ReferenceType.SecurityScheme,
+                            Id = "Bearer"
+                        }
+                    },
+                    new string[] { }
+                }
+            })
+            .WithMetadata(new OpenApiString("This endpint returns a list of ALL FILES from database."))
+            .Produces<List<DocumentDto>>(StatusCodes.Status200OK);
+        
+        webApp.MapGet("/docs/faulty", GetFaultyDocuments)
+            .WithName("Retrieve faulty documents")
+            .WithTags("Docs")
+            .WithMetadata(new OpenApiSecurityRequirement
+            {
+                {
+                    new OpenApiSecurityScheme
+                    {
+                        Reference = new OpenApiReference
+                        {
+                            Type = ReferenceType.SecurityScheme,
+                            Id = "Bearer"
+                        }
+                    },
+                    new string[] { }
+                }
+            })
+            .WithMetadata(new OpenApiString("This endpint returns a list of FAULTY FILES ONLY from database (which need manual review)."))
+            .Produces<List<DocumentDto>>(StatusCodes.Status200OK);
+        
+        webApp.MapGet("/docs/{id}", GetDocumentById)
+            .WithName("Retrieve a document")
+            .WithTags("Docs")
+            .WithMetadata(new OpenApiSecurityRequirement
+            {
+                {
+                    new OpenApiSecurityScheme
+                    {
+                        Reference = new OpenApiReference
+                        {
+                            Type = ReferenceType.SecurityScheme,
+                            Id = "Bearer"
+                        }
+                    },
+                    new string[] { }
+                }
+            })
+            .WithMetadata(new OpenApiString("This endpint excpects FILE ID, returns a specified FILE from database."))
+            .Produces<DocumentDto>(StatusCodes.Status200OK)
+            .Produces(StatusCodes.Status404NotFound)
+            .Produces(StatusCodes.Status400BadRequest);
     }
 
     // piem, jāposto uz localhost:7050/resolve/f5156900-0253-11ee-be56-0242ac120002
@@ -30,6 +130,7 @@ public static class DocumentRoutes
         ClaimsPrincipal user,
         DocumentService docService)
     {
+        // TODO: add not found check
         Console.WriteLine($"Document id: {id}");
         var documentId = Guid.Parse(id);
 
