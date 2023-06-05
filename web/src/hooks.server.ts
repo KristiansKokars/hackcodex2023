@@ -1,5 +1,4 @@
 import { PUBLIC_BACKEND_URL } from '$env/static/public';
-import type { User } from '$lib/features/auth/User';
 import { redirect, type Handle } from '@sveltejs/kit';
 import { sequence } from '@sveltejs/kit/hooks';
 
