@@ -27,11 +27,11 @@ public static class DocumentRoutes
     private static async Task<IResult> Resolve(
         HttpContext context, 
         string id,
-        ClaimsPrincipal user)
+        ClaimsPrincipal user,
+        DocumentService docService)
     {
         Console.WriteLine($"Document id: {id}");
         var documentId = Guid.Parse(id);
-        var docService = context.RequestServices.GetRequiredService<DocumentService>();
 
         // Retrieve user
         var userId = user.Claims.First(claim => claim.Type == "Id").Value;
@@ -39,17 +39,24 @@ public static class DocumentRoutes
         // Read the request body
         using var reader = new StreamReader(context.Request.Body);
         var requestBody = await reader.ReadToEndAsync();
+        Console.WriteLine("RESOLVE REQ BODY:");
+        Console.WriteLine(requestBody);
 
         try
         {
-            var docContents = JsonSerializer.Deserialize<DocContentDto>(requestBody);
+            // var docContents = JsonSerializer.Deserialize<DocContentDto>(requestBody);
+            // Console.WriteLine("RESOLVE REQUEST:");
+            
+            // // TODO: request body is empty
+            // var contents = JsonSerializer.Serialize(docContents);
+            // Console.WriteLine(contents);
 
             // TODO: evaluate if format correct
 
             var resolved = docService.MarkDocumentSolved(
                 Guid.Parse(userId), 
                 documentId, 
-                JsonSerializer.Serialize(docContents));
+                requestBody);
 
             Console.WriteLine($"Resolved doc id: {resolved}");
             return Results.Ok(resolved);
@@ -74,12 +81,16 @@ public static class DocumentRoutes
 
         // Retrieve documents
         var docs = documentService.GetDocuments(Guid.Parse(userId));
+
+        Console.WriteLine("DOCS: " + docs.Count);
+
         var documentDtos = docs.Select(d => new DocumentDto
         {
             Id = d.Id,
             // TODO: recheck
-            InvoiceId = JsonSerializer.Deserialize<DocIdDto>(d.Content)!.InvoiceId["Value"].ToString()!,
-            Content = JsonSerializer.Deserialize<DocContentDto>(d.Content)!,
+            // InvoiceId = JsonSerializer.Deserialize<DocIdDto>(d.Content)!.InvoiceId["Value"].ToString()!,
+            InvoiceId = d.InvoiceId,
+            Content = JsonSerializer.Deserialize<ResponseDocContentDto>(d.Content)!,
             Link = d.Link,
             Status = d.Status,
             CreatedAt = d.CreatedAt != null 
@@ -106,8 +117,9 @@ public static class DocumentRoutes
         var documentDtos = docs.Select(d => new DocumentDto
         {
             Id = d.Id,
-            InvoiceId = JsonSerializer.Deserialize<DocIdDto>(d.Content)!.InvoiceId["Value"].ToString()!,
-            Content = JsonSerializer.Deserialize<DocContentDto>(d.Content)!,
+            // InvoiceId = JsonSerializer.Deserialize<DocIdDto>(d.Content)!.InvoiceId["Value"].ToString()!,
+            InvoiceId = d.InvoiceId,
+            Content = JsonSerializer.Deserialize<ResponseDocContentDto>(d.Content)!,
             Link = d.Link,
             Status = d.Status,
             CreatedAt = d.CreatedAt != null 
@@ -147,7 +159,7 @@ public static class DocumentRoutes
             {
                 Id = document.Id,
                 InvoiceId = JsonSerializer.Deserialize<DocIdDto>(document.Content)!.InvoiceId["Value"].ToString()!,
-                Content = JsonSerializer.Deserialize<DocContentDto>(document.Content)!,
+                Content = JsonSerializer.Deserialize<ResponseDocContentDto>(document.Content)!,
                 Link = document.Link,
                 Status = document.Status,
                 CreatedAt = document.CreatedAt != null 
@@ -230,7 +242,7 @@ public static class DocumentRoutes
                     {
                         Id = document.Id,
                         InvoiceId = invoiceId!,
-                        Content = JsonSerializer.Deserialize<DocContentDto>(contentMarkedJSON)!,
+                        Content = JsonSerializer.Deserialize<ResponseDocContentDto>(contentMarkedJSON)!,
                         Link = document.Link,
                         Status = document.Status,
                         CreatedAt = document.CreatedAt != null 
@@ -307,6 +319,8 @@ public static class DocumentRoutes
 
             var docStatus = "Correct";
 
+            string? invoiceId = null;
+
             foreach (var documentRow in req)
             {
                 var name = documentRow.Key;
@@ -315,17 +329,25 @@ public static class DocumentRoutes
                 var fieldValue = rowContent["Value"];
                 var fieldConfidence = Convert.ToDouble((float)rowContent["Confidence"]);
 
-                if (fieldConfidence < minRequiredPrecison)
+                if (name == "InvoiceId")
                 {
-                    docStatus = "Faulty";
-                    Console.WriteLine("Saving a faulty document");
+                    invoiceId = fieldValue.ToString();
                 }
+                else 
+                {
+                    if (fieldConfidence < minRequiredPrecison)
+                    {
+                        docStatus = "Faulty";
+                        Console.WriteLine("Saving a faulty document");
+                    }
 
-                Console.WriteLine($"Row: {name}, Value: {fieldValue}, %: {fieldConfidence}");
+                    Console.WriteLine($"Row: {name}, Value: {fieldValue}, %: {fieldConfidence}");
+                }
             }
 
             var content = JsonSerializer.Serialize(req);
             var doc = documentService.DocumentHelper(content, Guid.Parse(userId), fileName, docStatus);
+            doc.InvoiceId = invoiceId!;
 
             filesToInsert.Add(doc);
             fileNames.Add(fileName);
