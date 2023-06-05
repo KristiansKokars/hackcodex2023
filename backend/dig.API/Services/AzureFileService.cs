@@ -19,13 +19,27 @@ public class AzureFileService
         BlobContainerClient containerClient = blobServiceClient.GetBlobContainerClient(containerName);
 
         // Generate a unique file name
-        var fileName = Guid.NewGuid().ToString() + Path.GetExtension(file.FileName);
+        var extension = Path.GetExtension(file.FileName);
+        var fileName = Guid.NewGuid().ToString() + extension;
+        var contentType = "application/pdf";
+        if (extension != ".pdf")
+        {
+            contentType = "application/image";
+        }
 
+        Console.WriteLine("CONTENT TYPE: " + contentType);
+        
         BlobClient blobClient = containerClient.GetBlobClient(fileName);
 
         using (Stream fileStream = file.OpenReadStream())
         {
-            var uploadResult = await blobClient.UploadAsync(fileStream, overwrite: true);
+            var uploadResult = await blobClient.UploadAsync(fileStream, new BlobUploadOptions
+            {
+                HttpHeaders = new BlobHttpHeaders
+                {
+                    ContentType = contentType
+                }
+            }); // , overwrite: true
             if (uploadResult is null)
             {
                 return new Either<SimpleMessageError, string>(new SimpleMessageError("Failed to upload document!"));

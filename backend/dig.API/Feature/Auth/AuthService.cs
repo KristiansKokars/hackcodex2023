@@ -70,6 +70,8 @@ public class AuthService : IAuthService
         }
         catch (Exception ex)
         {
+            Console.WriteLine(ex.Message);
+
             return new Either<SimpleMessageError, UserDto>(
                 new SimpleMessageError($"Failed to add the user to the database! Error: {ex.Message}"));
         }

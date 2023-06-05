@@ -48,6 +48,9 @@ public static class AuthRoutes
     private static async Task<IResult> Register([FromHeader] string authorization, HttpContext context,
         AuthService authService)
     {
+        Console.WriteLine("INSIDE REGISTER");
+        Console.WriteLine(authorization);
+
         var (username, password) = GetCredentialsFromBasicAuth(authorization);
         var authResult = await authService.Register(username, password);
         return authResult.Map<IResult>(
@@ -59,9 +62,17 @@ public static class AuthRoutes
         AuthService authService)
     {
         var (username, password) = GetCredentialsFromBasicAuth(authorization);
+        Console.WriteLine("CREDENTIALS: ");
+        Console.WriteLine(username);
+        Console.WriteLine(password);
+
         var authResult = await authService.Login(username, password);
         return authResult.Map<IResult>(
-            error: error => Results.BadRequest(error),
+            error: error => 
+            {
+                Console.WriteLine(error);
+                return Results.BadRequest(error);
+            },
             success: user => Results.Ok(CreateTokenString(user)));
     }
 
