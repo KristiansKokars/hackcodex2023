@@ -6,11 +6,17 @@
 	><p>This project was made for the awesome HackCodeX hackathon!</p>
 	<p>
 		Due to that, this prototype is missing many things a real application would have and be secured
-		for, so don't be surprised if you find late night bugs here!
+		for, and is very unpolished.
 	</p>
+	<br />
 	<p>
-		Authentication is also very lax - it is done by simple username and there are no requirements
-		for a password.
+		NOTE: It is recommended to use this app in Firefox, since Chrome does not want to play ball with
+		embed tags and downloads PDFs instead of showing them. Solving this issue in time seems
+		impossible.
 	</p>
-	<p>Still, I hope you enjoy what we made in this little time!</p>
+	<br />
+	<p>
+		Authentication is very lax - it is done by simple username and there are no requirements for a
+		password.
+	</p>
 </Card>

@@ -10,7 +10,7 @@
 	let errorMessage: string | undefined;
 	let isRegistering = false;
 
-	async function loginUser() {
+	async function registerUser() {
 		errorMessage = '';
 		isRegistering = true;
 		const response = await fetch('/register', {
@@ -23,6 +23,7 @@
 
 		isRegistering = false;
 		if (response.redirected) {
+			console.log('Redirecting from register to /app');
 			goto('/app');
 		}
 		if (!response.ok) {
@@ -76,7 +77,7 @@
 						</div>
 
 						<div>
-							<Button color="dark" class="w-full" on:click={loginUser} enabled={!isRegistering}
+							<Button color="dark" class="w-full" on:click={registerUser} enabled={!isRegistering}
 								>{#if isRegistering}
 									<Spinner />
 								{:else}

@@ -109,9 +109,9 @@
 	</TableBody>
 </Table>
 {#if items.length == 0}
-<div class="grid divide-x grow">
-	<div class="flex flex-col items-center justify-center">
-		<p>There are no documents yet!</p>
+	<div class="grid divide-x grow">
+		<div class="flex flex-col items-center justify-center">
+			<p>There are no documents yet!</p>
+		</div>
 	</div>
-</div>
-{/if }
+{/if}

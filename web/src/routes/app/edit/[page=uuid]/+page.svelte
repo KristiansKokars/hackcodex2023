@@ -2,7 +2,7 @@
 	import { page } from '$app/stores';
 	import type { DocumentRow } from '$lib/features/documents/DocumentRow.js';
 	import type { FormField } from '$lib/features/documents/FormField.js';
-	import { Label, Input, Button, Card, Progressbar } from 'flowbite-svelte';
+	import { Button, Card } from 'flowbite-svelte';
 	import DynamicFormInput from './DynamicFormInput.svelte';
 	import ScannedDocumentView from '$lib/components/ScannedDocumentView.svelte';
 	import { goto } from '$app/navigation';
@@ -26,8 +26,6 @@
 		}
 
 		originalDocumentRows.set(key, documentValue);
-
-		console.log(`Min Percent: ${scannedDocument.minAllowedPercent}`);
 
 		formFields.push({
 			label: key,
@@ -81,7 +79,7 @@
 	<div class="flex items-center justify-center h-full">
 		<ScannedDocumentView scannedDocumentLink={scannedDocument.link} />
 	</div>
-	<div class="flex flex-col items-center justify-center">
+	<div class="flex flex-col items-center">
 		{#if isDocumentFaulty}
 			<Card color="red" class="mb-4 mt-4"
 				>Document has problems, see below fields for confidence ratings and edit if neccessary.</Card

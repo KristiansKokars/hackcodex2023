@@ -3,11 +3,13 @@ import { PUBLIC_BACKEND_URL } from '$env/static/public';
 import type { User } from '$lib/features/auth/User.js';
 import { redirect } from '@sveltejs/kit';
 
-export async function POST({ fetch, request, locals }) {
+export async function POST({ fetch, request, locals, cookies }) {
 	if (dev) {
 		// To allow self-signed certs during development to pass
 		process.env.NODE_TLS_REJECT_UNAUTHORIZED = '0';
 	}
+
+	console.log('Registering user...');
 
 	const authorizationHeader = request.headers.get('authorization');
 
@@ -28,7 +30,15 @@ export async function POST({ fetch, request, locals }) {
 	if (response.ok) {
 		const user = (await response.json()) as User;
 		locals.user = user;
-		throw redirect(302, "/");
+
+		console.log('Setting user session token');
+		cookies.set('sessionUser', JSON.stringify(user), {
+			path: '/',
+			httpOnly: true,
+			secure: true
+		});
+
+		throw redirect(302, '/app');
 	}
 
 	return response;
